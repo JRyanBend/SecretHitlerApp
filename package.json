@@ -1,0 +1,15 @@
+{
+  "name": "socket_demo",
+  "version": "0.0.1",
+  "description": "Testing out socket.io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ryan Bend",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.2",
+    "socket.io": "^1.7.3"
+  }
+}
