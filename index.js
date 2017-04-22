@@ -5,6 +5,8 @@ var io = require('socket.io')(http);
 var people = [];
 var current_user_count = 0;
 var votes = 0;
+var yes = 0;
+var no = 0;
 
 
 app.get('/', function(req, res) {
@@ -13,8 +15,17 @@ app.get('/', function(req, res) {
 
 io.on('connection', function(socket){
 
+    //console.log(io.sockets.manager.connected);
+
     // Check against max players
-    if(people.length < 2) {
+    if(current_user_count < 2) {
+
+        // Track user connections
+        // (There has to be a better way to do this, but I have yet to find one)
+        current_user_count++;
+        io.emit('chat message', 'A user has connected');
+        console.log("Current Usercount: " + current_user_count);
+
 
         // Connection check: when you reboot the node server it clears the user count
         // use this function to fix that or at least minimize impact
@@ -28,22 +39,39 @@ io.on('connection', function(socket){
         socket.on('call vote', function(test) {
             console.log("Vote called");
             io.emit("vote called", "data");
+
+            console.log("votes = " + votes);
         });
 
         // User has voted
         socket.on('voted', function(vote) {
+
             if(vote) {
                 console.log("Voted Yes");
+                yes++;
             } else {
                 console.log("Voted No");
+                no++;
             }
             votes++;
-        });
 
-        // Track user connections
-        io.emit('chat message', 'A user has connected');
-        current_user_count = people.length + 1;
-        console.log("Current Usercount: " + current_user_count);
+            console.log("people.length = " + people.length);
+            console.log("votes = " + votes);
+
+            if (votes === people.length) {
+                if(yes > no) {
+                    console.log("The Ja's have it!");
+                    io.emit("vote complete", true);
+                } else {
+                    console.log("The Nein's have it!");
+                    io.emit("vote complete", false);
+                }
+                votes = 0;
+                yes = 0;
+                no = 0;
+                console.log("Vote has concluded, values should be reset.");
+            }
+        });
 
         // Generate new user id
         socket.on('nickname', function(nick) {
@@ -53,11 +81,11 @@ io.on('connection', function(socket){
 
         // Update page userlist
         io.emit("update users", people);
-
         console.log(people);
         
         // Track user disconnections
         socket.on('disconnect', function() {
+            current_user_count--;
             io.emit('chat message', 'A user has disconnected');
             console.log("Current usercount: " + current_user_count);
 

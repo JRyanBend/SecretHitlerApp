@@ -1,190 +1,351 @@
-
 <!doctype html>
 <html>
-  <head>
-    <title>Socket.IO chat</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      h1,h2,h3,h4,h5 {
-        margin-bottom: 10px;
-      }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
-      .messages__name {
-        font-weight: bold;
-      }
+    <head>
+        <title>Socket.IO chat</title>
+        <style>
 
-      .shroud {
-        position: fixed;
-        height: 100%;
-        width: 100%;
-        background-color: #ccc;
-        opacity: 0.5;
-        z-index: 2;
-      }
+            /* Base */
+            * { margin: 0; padding: 0; box-sizing: border-box; }
 
-      .shroud form {
-        height: 300px;
-        width: 400px;
-        background-color: #fff;
-        margin: auto;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-      }
+            body { 
+                font: 16px Helvetica, Arial; 
+            }
 
-      .sidebar {
-        position: absolute;
-        right:0;
-        height: 400px;
-        width: 200px;
-        background-color:#333;
-        color: #fff;
-        z-index: 1;
-      }
+            h1,h2,h3,h4,h5 {
+                margin-bottom: 0.5em;
+            }
 
-      .sidebar h3 {
-        padding: 10px 10px 0px 10px;
-      }
+            .title {
+                font-size: 2em;
+            }
 
-      .user_list ul {
-        list-style-type: none;
-        margin: 0;
-        padding: 10px;
-      }
+            .title--sub {
+              font-size: 1.3em;
+            }
 
-      .user_list ul li {
-        padding: 5px;
-        font-size: 16px;
-      }
+            .button {
+                padding: 10px;
+                background-color: #fff;
+                border: 1px solid #333;
+                color: #333;
+                border-radius: 3px;
+                margin: 1em;
+                cursor: pointer;
+                font-weight: bold;
+                text-transform: uppercase;
+                transition: background-color 0.5s;
+            }
 
-      .votes {
-          border: 1px solid #ddd;
-          padding: 10px;
-          background-color: #eee;
-      }
+            .button:hover {
+                background-color: #ccc;
+            }
 
-      .votes button {
-          width: 100%;
-          max-width: 5em;
-          padding: 5px;
-          margin: 5px;
-          border: 1px solid #ccc;
-          border-radius: 3px;
-          background-color: #ddd;
-      }
+            .form {
 
-    </style>
-  </head>
-  <body>
-    <div class="shroud">
-      <form id="nickname">
-        <label>Please enter a nickname:</label>
-        <input id="nick" autocomplete="off" /><button>Ok</button>
-      </form>
-    </div>
-    <aside class="sidebar">
-      <h3>Currently Online</h3>
-      <div id="user_list" class="user_list"></div>
-      <button id="call_vote">Call Vote</div>
-    </aside>
-    <ul id="messages" class="messages"></ul>
-    <form id="send_msg" action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
-    </form>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    <script>
-    $(function() {
-        var socket = io();
+            }
 
-        //voting functions
-        function handleVote(vote){
-          if(vote) {
-              console.log("Voted Yes")
-              socket.emit('voted', true);
-              return false;
-          } else {
-              console.log("Voted No")
-              socket.emit('voted', false);
-              return false;
-          }
-        }
+            .form__label {
+
+            }
+
+            .form__input {
+                border: none;
+                padding: 0.4em;
+                font-size: 1em;
+                border: 2px solid #333;
+                border-radius: 3px;
+            }
 
 
-        // Collect your nickname and send it to index.js to append to your messages
-        $('#nickname').submit(function(){
-            socket.emit('nickname', $('#nick') .val());
-            $('.shroud').hide();
-            return false;
-        });
+            /* Chat */
+            .chat { 
+                background: #000; 
+                padding: 3px;
+                position: fixed; 
+                bottom: 0; 
+                width: 100%; 
+             }
 
-        // Sends the message to the server to distribute to all members
-      	$('#send_msg').submit(function(){
-            socket.emit('chat message', $('#m') .val());
-  	        $('#m').val('');
-  	        return false;
-      	});
+            .chat input { 
+                border: 0; 
+                padding: 10px; 
+                width: 90%; 
+                margin-right: .5%; 
+            }
 
-        // When a message is received, display it
-      	socket.on('chat message', function(msg) {
-            $('#messages').append($('<li>').html(msg));
-      	});
+            .chat button { 
+                width: 9%; 
+                background: rgb(130, 224, 255); 
+                border: none; 
+                padding: 10 px; 
+            }
 
-        // Call a vote
-        $('#call_vote').click(function(){
-            socket.emit('call vote', "test");
-            return false;
-        });
+            #messages { 
+                list-style-type: none; 
+                margin: 0; 
+                padding: 0; 
+            }
+
+            #messages li { 
+                padding: 5px 10px; 
+            }
+
+            #messages li:nth-child(odd) { 
+                background: #eee; 
+            }
+
+            .messages__name {
+                font-weight: bold;
+            }
+      
+            /* Splash Screen */
+            .shroud {
+                position: fixed;
+                height: 100%;
+                width: 100%;
+                background-color: red;
+                color: #fff;
+                z-index: 2;
+            }
+      
+            .shroud .intro {
+                min-height: 100px;
+                max-height: 400px;
+                max-width: 500px;
+                background-color: darkred;
+                margin: auto;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 20px;
+                text-align: center;
+            }
+  
+            .button--ready {
+                border-color: darkgreen;
+                background-color: green;
+                color: #fff;
+            }
+
+            .user-ready {
+                display: none;
+            }
+
+            .form--nickname .form__label {
+                display: block;
+                margin-bottom: 0.5em;
+            }
+
+            .form--nickname .form__input {
+                display: inline-block;
+                width: 75%;
+                margin: 0 1em 1em 1em;
+                border: 3px dashed #333;
+                font-size: 2em;
+                text-align: center;
+            }
+
+            .form--nickname .button {
+                display: inline-block;
+                width: 75%;
+                margin: 0 1em 1em 1em;
+            }
+
+            /* Sidebar */      
+            .sidebar {
+                position: absolute;
+                right:0;
+                height: 400px;
+                width: 200px;
+                background-color:#333;
+                color: #fff;
+                z-index: 1;
+            }
+      
+            .sidebar h3 {
+                padding: 10px 10px 0px 10px;
+            }
+      
+            .user_list ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 10px;
+            }
+      
+            .user_list ul li {
+                padding: 5px;
+                font-size: 16px;
+                border: 1px solid #fff;
+                margin: 10px 5px;
+                border-radius: 50px;
+            }
+            
+
+            /* Vote Stuff */
+            .votes {
+                border: 1px solid #ddd;
+                padding: 10px;
+                background-color: #eee;
+            }
+      
+            .votes button {
+                width: 100%;
+                max-width: 5em;
+                padding: 5px;
+                margin: 5px;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                background-color: #ddd;
+            }
+    
+        </style>
+    </head>
+    <body>
+        <div class="shroud">
+            <div class="intro">
+                <h1 class="title">Splash Screen!</h1>
+                <form id="nickname" class="form form--nickname">
+                    <label class="form__label">Please enter a nickname:</label>
+                    <input id="nick" autocomplete="off" class="form__input" /><button class="button button--form">Let 'er Rip!</button>
+                </form>
+                <div class="user-ready" id="user-ready">
+                    <h3 class="title title--sub">Waiting for users to start...</h3>
+                    <div id="user_list" class="user_list">
+                        <p>You're the only one here!</p>    
+                    </div>
+                    <button id="user-confirmed" class="button button--ready">Ready!</button>
+                </div>
+            </div>
+        </div>
+        <aside class="sidebar">
+            <h3>Currently Online</h3>
+            <div id="user_list" class="user_list"></div>
+            <button id="call_vote">Call Vote</div>
+        </aside>
+        <ul id="messages" class="messages"></ul>
+        <form id="send_msg" action="" class="chat">
+            <input id="m" autocomplete="off" /><button>Send</button>
+        </form>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+        <script>
+        $(function() {
+            var socket = io();
+
+            // Lightbox
+            function lightbox(args) {
+              
+            }
+
+            // Voting functions
+            function handleVote(vote){
+                if(vote) {
+                    console.log("Voted Yes")
+                    socket.emit('voted', true);
+                    return false;
+                } else {
+                    console.log("Voted No")
+                    socket.emit('voted', false);
+                    return false;
+                }
+            }
+
+
+            // Collect your nickname and send it to index.js to append to your messages
+            $('#nickname').submit(function(){
+                if($('#nick').val().length > 0 ) {
+                    socket.emit('nickname', $('#nick').val());
+                    $('#nickname').hide();
+                    $('#user-ready').show();
+                    return false;
+                } else {
+                  console.log("Has to be at least one character bra")
+                }
+            });
+
+            $("#user-confirmed").on("click", function() {
+
+                // So there's still some work to be done here, we need to 
+                // confirm the amount of players we want, and have some kind 
+                // of overide in case they want to start with less than 10
+                $(".shroud").hide();
+            });
+
+            // Sends the message to the server to distribute to all members
+      	    $('#send_msg').submit(function(){
+                socket.emit('chat message', $('#m') .val());
+  	            $('#m').val('');
+  	            return false;
+      	    });
+
+            // When a message is received, display it
+      	    socket.on('chat message', function(msg) {
+                $('#messages').append($('<li>').html(msg));
+      	    });
+
+            // Call a vote
+            $('#call_vote').click(function(){
+                socket.emit('call vote', "test");
+                return false;
+            });
 
        
 
 
-        //Vote call successful, display vote ui
-        socket.on('vote called', function(msg) {
+            //Vote call successful, display vote ui
+            socket.on('vote called', function(msg) {
             
-            // Disable vote button for all
-            $('#call_vote').attr("disabled");
+                // Disable vote button for all
+                $('#call_vote').attr("disabled");
 
-            $('#messages').append($('<li>').html('<div class="votes"><h4><span>{{Nickname}}</span> has nominated <span>{{other name}}</span> for chancellor</h4><button id="vote_yes">JA!</button><button id="vote_no">NEIN!</button></div>'));
+                $('#messages').append($('<li>').html('<div class="votes"><h4><span>{{Nickname}}</span> has nominated <span>{{other name}}</span> for chancellor</h4><button id="vote_yes">JA!</button><button id="vote_no">NEIN!</button></div>'));
 
-             // Handle a vote
-            $(document).on("click","#vote_yes", function() {
-              console.log("Voted Yes")
-              socket.emit('voted', true);
-              return false;
+                 // Handle a vote
+                $(document).on("click","#vote_yes", function() {
+                    console.log("Voted Yes")
+                    socket.emit('voted', true);
+                    return false;
+                });
+                $(document).on("click","#vote_no", function() {
+                    console.log("Voted no")
+                    socket.emit('voted', false);
+                    return false;
+                });
             });
-            $(document).on("click","#vote_no", function() {
-              console.log("Voted no")
-              socket.emit('voted', false);
-              return false;
-            });
-        });
 
-        // When a user connects/disconnects, update the 'Currently Online' sidebar
-        socket.on('update users', function(people) {
-            console.log(people);
-            var userList = document.createElement('ul');
-                for(var i = 0;i < people.length;i++) {
-                    $(userList).append($('<li>').text(people[i].nick));
+            //Vote complete, display vote completion ui
+            socket.on('vote complete', function(result) {
+
+                var results = result ? "Ja" : "Nein";
+
+                // Replace with full screen ui, just hide and show as neccessary
+                $('#messages').append($('<li>').html('<div class="votes"><h4>The ' + results + 's have it!</h4></div>'));
+            });
+
+            // When a user connects/disconnects, update the 'Currently Online' sidebar
+            socket.on('update users', function(people) {
+                console.log(people);
+                if(people.length) {
+                    var userList = document.createElement('ul');
+                        for(var i = 0;i < people.length;i++) {
+                          //TODO: fix the ready bubble so it works
+                            $(userList).append('<li><span class="ready-bubble"></span>' + people[i].nick + '</li>');
+                        }
+
+                    $("#user_list").html('').append(userList);
                 }
-            $("#user_list").html('').append(userList);
-        });
+            });
 
-        // When a user connects/disconnects, update the 'Currently Online' sidebar
-        socket.on('disconnecter', function() {
-            console.log("Sorry we full!");
-            $("body").html('').append("Sorry we full!");
-        });
+            // When a user connects/disconnects, update the 'Currently Online' sidebar
+            socket.on('disconnecter', function() {
+                console.log("Sorry we full!");
+                $("body").html('').append("Sorry we full!");
+            });
 
-    });
-    </script>
-  </body>
+        });
+        </script>
+    </body>
 </html>
