@@ -17,8 +17,9 @@ io.on('connection', function(socket){
 
     //console.log(io.sockets.manager.connected);
 
+    console.log("New user");
     // Check against max players
-    if(current_user_count < 2) {
+    if(current_user_count <= 10) {
 
         // Track user connections
         // (There has to be a better way to do this, but I have yet to find one)
@@ -75,14 +76,31 @@ io.on('connection', function(socket){
 
         // Generate new user id
         socket.on('nickname', function(nick) {
-            people.push({ "user_id": socket.id, "nick": nick });
+            people.push({ "user_id": socket.id, "nick": nick, "ready": false });
             io.emit("update users", people);
         });
 
         // Update page userlist
-        io.emit("update users", people);
+        io.emit('update users', people);
         console.log(people);
         
+        // User declares they are ready 
+        socket.on('declare ready', function() {
+            console.log(people);
+            for(var i = 0;i < people.length;i++) {
+                if(people[i].user_id == socket.id) {
+                    if(people[i].ready === true) {
+                        people[i].ready = false;    
+                    } else {
+                        people[i].ready = true;
+                    }
+                    
+                }
+            }
+            console.log(people);
+            io.emit("update users", people)
+        });
+
         // Track user disconnections
         socket.on('disconnect', function() {
             current_user_count--;
@@ -97,7 +115,7 @@ io.on('connection', function(socket){
             }
 
             // Update page userlist
-            io.emit("update_users", people);
+            io.emit('update_users', people);
         });
 
         // When message submitted, emits to entire userbase
@@ -111,8 +129,23 @@ io.on('connection', function(socket){
         });
 
     } else { 
-        io.emit("disconnecter", true);
-        socket.disconnect(true);
+        console.log("People.length = " + people.length);
+
+
+        // Too many players or game underway, refuse access
+        for(var i = 0;i < current_user_count;i++) {
+            console.log("People id = " + people[i].user_id)
+            console.log("Socket id = " + socket.id)
+            if (people[i].user_id == socket.id) {
+                //do nothing!
+                console.log("You get to stay!");
+            } else {
+                console.log("Here?")
+                socket.emit("disconnecter", true);
+                socket.disconnect(true);        
+            }
+        }
+        
     }
 
     

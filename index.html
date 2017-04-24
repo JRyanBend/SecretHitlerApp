@@ -2,17 +2,35 @@
 <html>
     <head>
         <title>Socket.IO chat</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
 
             /* Base */
             * { margin: 0; padding: 0; box-sizing: border-box; }
 
             body { 
-                font: 16px Helvetica, Arial; 
+                font: 16px Helvetica, Arial;
+                overflow: hidden; 
             }
 
             h1,h2,h3,h4,h5 {
                 margin-bottom: 0.5em;
+            }
+
+            .text--small {
+                font-size: 0.7em;
+            }
+
+            .text {
+                font-size: 1em;
+            }
+
+            .text--large {
+                font-size: 1.3em;
+            }
+
+            .text--larger {
+                font-size: 1.7em;
             }
 
             .title {
@@ -54,6 +72,30 @@
                 font-size: 1em;
                 border: 2px solid #333;
                 border-radius: 3px;
+            }
+
+            /* Header */
+            .header {
+                min-height: 2.5em;
+                background-color: #333;
+            }
+
+            .header .username {
+                display: inline-block;
+                color: #fff;
+                font-weight: bold;
+                padding: 0.6em;
+                cursor: pointer;
+            }
+
+            .header .menu {
+                display: inline-block;
+                color: #fff;
+                font-weight: bold;
+                padding: 0.6em;
+                cursor: pointer;
+                position: absolute;
+                right: 0;
             }
 
 
@@ -121,11 +163,21 @@
                 right: 0;
                 padding: 20px;
                 text-align: center;
+                border-radius: 2px;
+                border: 1px solid #333;
             }
   
-            .button--ready {
+            .button--unready,
+            .button--unready:hover {
                 border-color: darkgreen;
                 background-color: green;
+                color: #fff;
+            }
+
+            .intro .button--ready,
+            .intro .button--ready:hover {
+                border-color: forestgreen;
+                background-color: darkgreen;
                 color: #fff;
             }
 
@@ -156,31 +208,74 @@
             /* Sidebar */      
             .sidebar {
                 position: absolute;
-                right:0;
-                height: 400px;
-                width: 200px;
+                right: -300px;
+                height: 100%;
+                width: 300px;
                 background-color:#333;
                 color: #fff;
                 z-index: 1;
+                transition: all 0.5s;
+            }
+
+            .sidebar .sidebar__close {
+                cursor: pointer;
+                background-color: #555;
+                padding-bottom: 10px;
+                margin-bottom: 0;
+            }
+
+            .sidebar--show {
+                right: 0;
+            } 
+
+            .sidebar .user_list ul li {
+                border: none;
+                border-radius: none;
+                transition: color 0.3s;
+            }
+
+            .sidebar .user_list ul li:hover {
+                color: #ccc;
             }
       
             .sidebar h3 {
                 padding: 10px 10px 0px 10px;
             }
-      
+            
+
+            /* Userlist module */
             .user_list ul {
                 list-style-type: none;
                 margin: 0;
                 padding: 10px;
             }
-      
+
             .user_list ul li {
-                padding: 5px;
+                padding: 10px 5px;
                 font-size: 16px;
                 border: 1px solid #fff;
                 margin: 10px 5px;
                 border-radius: 50px;
+                background-color: #333;
+                font-weight: bold;
             }
+
+            .user_list ul li .ready-bubble {
+                height: 10px;
+                width: 10px;
+                background-color: red;
+                display: inline-block;
+                border-radius: 100%;
+                transition: all 0.5s;
+                margin-right: 10px;
+            }
+
+            .user_list ul li .ready-bubble.ready-bubble--ready {
+                height: 12px;
+                width: 12px;
+                background-color: green;
+            }
+
             
 
             /* Vote Stuff */
@@ -215,15 +310,22 @@
                     <div id="user_list" class="user_list">
                         <p>You're the only one here!</p>    
                     </div>
-                    <button id="user-confirmed" class="button button--ready">Ready!</button>
+                    <button id="user-confirmed" class="button button--unready">Ready!</button>
                 </div>
             </div>
         </div>
         <aside class="sidebar">
+            <h3 id="sidebar-close" class="sidebar__close"> < Close</h3>
+            <hr />
             <h3>Currently Online</h3>
-            <div id="user_list" class="user_list"></div>
+            <div id="user_list2" class="user_list"></div>
             <button id="call_vote">Call Vote</div>
         </aside>
+
+        <header class="header">
+            <div id="username" class="username text-large"></div>
+            <div class="menu" id="menu">Menu</div>
+        </header>
         <ul id="messages" class="messages"></ul>
         <form id="send_msg" action="" class="chat">
             <input id="m" autocomplete="off" /><button>Send</button>
@@ -234,6 +336,18 @@
         <script>
         $(function() {
             var socket = io();
+            var currentUser;
+
+
+            // Presentation logic
+            /////////////////////
+
+            // Menu button
+            $("#menu, #sidebar-close").on("click", function() {
+                $(".sidebar").toggleClass("sidebar--show");
+            });
+
+
 
             // Lightbox
             function lightbox(args) {
@@ -255,11 +369,14 @@
 
 
             // Collect your nickname and send it to index.js to append to your messages
+            // TODO: Better name validation, maybe set currentUser somewhere safer
             $('#nickname').submit(function(){
                 if($('#nick').val().length > 0 ) {
-                    socket.emit('nickname', $('#nick').val());
+                    currentUser = $('#nick').val();
+                    socket.emit('nickname', currentUser);
                     $('#nickname').hide();
                     $('#user-ready').show();
+                    $("#username").text(currentUser);
                     return false;
                 } else {
                   console.log("Has to be at least one character bra")
@@ -271,7 +388,10 @@
                 // So there's still some work to be done here, we need to 
                 // confirm the amount of players we want, and have some kind 
                 // of overide in case they want to start with less than 10
-                $(".shroud").hide();
+                $("#user-confirmed").toggleClass("button--ready");
+
+                socket.emit('declare ready', "test");
+
             });
 
             // Sends the message to the server to distribute to all members
@@ -292,8 +412,7 @@
                 return false;
             });
 
-       
-
+    
 
             //Vote call successful, display vote ui
             socket.on('vote called', function(msg) {
@@ -330,19 +449,24 @@
                 console.log(people);
                 if(people.length) {
                     var userList = document.createElement('ul');
-                        for(var i = 0;i < people.length;i++) {
-                          //TODO: fix the ready bubble so it works
-                            $(userList).append('<li><span class="ready-bubble"></span>' + people[i].nick + '</li>');
-                        }
+                    
+                    for(var i = 0;i < people.length;i++) {
+                        //TODO: fix the ready bubble so it works
+                        var userReady = people[i].ready ? ' ready-bubble--ready' : '';
+                        $(userList).append('<li><span class="ready-bubble ' + userReady + '"></span>' + people[i].nick + '</li>');
+                    }
 
+                    // TODO: This is super ugly. fix it 
                     $("#user_list").html('').append(userList);
+                    $("#user_list2").html('');
+                    $("#user_list").clone().appendTo("#user_list2");
                 }
             });
 
             // When a user connects/disconnects, update the 'Currently Online' sidebar
             socket.on('disconnecter', function() {
                 console.log("Sorry we full!");
-                $("body").html('').append("Sorry we full!");
+                $("body").html('').append("Sorry, the game is currently full or in progress, please try again.");
             });
 
         });
