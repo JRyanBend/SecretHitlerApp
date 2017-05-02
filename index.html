@@ -77,6 +77,14 @@
                 border: 2px solid #333;
                 border-radius: 3px;
             }
+            .error {
+                display: none;
+                color: red;
+                background-color: #fff;
+                border-radius: 3px;
+                border: 1px solid #333;
+            }
+
 
             /* Header */
             .header {
@@ -312,7 +320,9 @@
                 <h1 class="title">Splash Screen!</h1>
                 <form id="nickname" class="form form--nickname">
                     <label class="form__label">Please enter a nickname:</label>
-                    <input id="nick" autocomplete="off" class="form__input" /><button class="button button--form">Let 'er Rip!</button>
+                    <input id="nick" autocomplete="off" class="form__input" />
+                    <p class="error" id="name_error">That name is already taken, please try another one</p>
+                    <button class="button button--form">Let 'er Rip!</button>
                 </form>
                 <div class="user-ready" id="user-ready">
                     <h3 class="title title--sub">Waiting for users to start...</h3>
@@ -424,12 +434,22 @@
                 if($('#nick').val().length > 0 ) {
                     currentUser = $('#nick').val();
                     socket.emit('nickname', currentUser);
-                    $('#nickname').hide();
-                    $('#user-ready').show();
-                    $("#username").text(currentUser);
                     return false;
                 } else {
                   console.log("Has to be at least one character bra")
+                }
+            });
+
+            // If nick already exists get them to try again
+            socket.on("name error", function(isError) {
+                if(isError) {
+                    // Tell the user that they need to pick a name that isn't in use
+                    $("#name_error").show();
+                } else {
+                    $("#name_error").hide();
+                    $('#nickname').hide();
+                    $('#user-ready').show();
+                    $("#username").text(currentUser);
                 }
             });
 
@@ -469,9 +489,14 @@
             });
 
             // The server says someone has started the game, output who and boot to the game screen
-            socket.on('start game', function(name) {
+            socket.on('start game', function(data) {
+                // Set a cookie(localstorage) with the game number so if they disconnect they can rejoin
+                console.log(data)
+                document.cookie = "secret-hitler-game=" + data[1];
+                document.cookie = "username=" + data[0];
+
                 $('.shroud').hide();
-                 emitLocal('<span class="text--bold">' + name + '</span> has started the game!');
+                 emitLocal('<span class="text--bold">' + data[0] + '</span> has started the game!');
             });
 
 

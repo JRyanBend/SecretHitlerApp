@@ -9,6 +9,7 @@ var yes = 0;
 var no = 0;
 var ready = 0;
 var gameStarted = false;
+var gameId = "";
 
 
 app.get('/', function(req, res) {
@@ -35,6 +36,7 @@ io.on('connection', function(socket){
         // (There has to be a better way to do this, but I have yet to find one)
         current_user_count++;
 
+
         // If game has started announce users connecting/disconnecting
         if(gameStarted) {
             io.emit('chat message', 'A user has connected');
@@ -44,9 +46,36 @@ io.on('connection', function(socket){
 
         // Generate new user id
         socket.on('nickname', function(nick) {
-            people.push({ "user_id": socket.id, "nick": nick, "ready": false });
-            io.emit("update users", people);
-            console.log(people);
+            // On first run don't check for dupe names
+            if(!people.length) {
+                // Set the player in the people array
+                people.push({ "user_id": socket.id, "nick": nick, "ready": false });
+                io.emit("update users", people);
+                io.emit("name error", false); 
+                console.log(people);
+            } else {
+                // Since there are people now, check to see if there's any dupes
+                var dupe = 0 ;
+                for(var i = 0;i < people.length;i++) {
+                    if(people[i].nick === nick) {
+                        //if there are, set this flag
+                        dupe = 1;
+                        console.log("dupe");
+                    } 
+                }
+
+                // Check to see if the dupe flag was set
+                if(dupe) {
+                    // There's a dupelicate name! Send an error to the client
+                    io.emit("name error", true);        
+                } else {
+                    // All good, set the player in the people aray
+                    people.push({ "user_id": socket.id, "nick": nick, "ready": false });
+                    io.emit("update users", people);
+                    io.emit("name error", false); 
+                    console.log(people);
+                }
+            }
         });
 
 
@@ -138,12 +167,15 @@ io.on('connection', function(socket){
 
         // User has clicked 'Start Game!' push all users to the game screen
         socket.on('game started', function(name) {
+            // Create GameId
+            gameId = Math.random().toString(36).substr(2, 5);
+
             // Iterate over people array
             for(var i = 0;i < people.length;i++) {
                 // If this person is ready
                 if(people[i].ready == true) {
                     // Emit the start game event to them
-                    io.to(people[i].user_id).emit("start game", name);
+                    io.to(people[i].user_id).emit("start game", [name, gameId]);
                 } else {
                     // If they're not ready disconnect them
                     io.to(people[i].user_id).emit("disconnecter", true);
@@ -212,6 +244,8 @@ io.on('connection', function(socket){
     } else { 
 
         console.log("People.length = " + people.length);
+        // Here we can check the cookie to see if the current gameId matches the one in the client, and reconnect them
+        //  TODO: Make this work!
 
         // Too many players or game underway, refuse access
         for(var i = 0;i < current_user_count;i++) {
