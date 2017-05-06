@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <title>Socket.IO chat</title>
+        <title>Secret Hitler!</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
 
@@ -157,13 +157,14 @@
                 background-color: red;
                 color: #fff;
                 z-index: 2;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
       
-            .shroud .intro {
+            .intro {
                 min-height: 100px;
-                max-height: 400px;
+                max-height: 1100px;
                 max-width: 500px;
-                background-color: darkred;
                 margin: auto;
                 position: absolute;
                 top: 0;
@@ -172,8 +173,32 @@
                 right: 0;
                 padding: 20px;
                 text-align: center;
+            }
+
+            .intro__form {
+                background-color: darkred;
+                padding: 20px;
                 border-radius: 2px;
                 border: 1px solid #333;
+                margin-bottom: 20px;
+            }
+
+            .logo {
+                width: 100%;
+                -webkit-animation: mover 2s infinite;
+                animation: logo-float 2s infinite ease-in-out;
+            }
+
+            @-webkit-keyframes logo-float {
+                0% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+                100% { transform: translateY(0); }
+            }
+
+            @keyframes logo-float {
+                0% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+                100% { transform: translateY(0); }
             }
   
             .button--unready,
@@ -224,7 +249,7 @@
 
             /* Sidebar */      
             .sidebar {
-                position: absolute;
+                position: fixed;
                 right: -300px;
                 height: 100%;
                 width: 300px;
@@ -317,20 +342,22 @@
     <body>
         <div class="shroud">
             <div class="intro">
-                <h1 class="title">Splash Screen!</h1>
-                <form id="nickname" class="form form--nickname">
-                    <label class="form__label">Please enter a nickname:</label>
-                    <input id="nick" autocomplete="off" class="form__input" />
-                    <p class="error" id="name_error">That name is already taken, please try another one</p>
-                    <button class="button button--form">Let 'er Rip!</button>
-                </form>
-                <div class="user-ready" id="user-ready">
-                    <h3 class="title title--sub">Waiting for users to start...</h3>
-                    <div id="user_list" class="user_list">
-                        <p>You're the only one here!</p>    
+                <img class="logo" src="img/SecretHitlerLogo.png">
+                <div class="intro__form">
+                    <form id="nickname" class="form form--nickname">
+                        <label class="form__label">Please enter a nickname:</label>
+                        <input id="nick" autocomplete="off" class="form__input" />
+                        <p class="error" id="name_error">That name is already taken, please try another one</p>
+                        <button class="button button--form">Let 'er Rip!</button>
+                    </form>
+                    <div class="user-ready" id="user-ready">
+                        <h3 class="title title--sub">Waiting for users to start...</h3>
+                        <div id="user_list" class="user_list">
+                            <p>You're the only one here!</p>    
+                        </div>
+                        <button id="user-confirmed" class="button button--unready">Ready!</button>
+                        <button id="start-game" class="button button--start">Start Game!</button>
                     </div>
-                    <button id="user-confirmed" class="button button--unready">Ready!</button>
-                    <button id="start-game" class="button button--start">Start Game!</button>
                 </div>
             </div>
         </div>
@@ -374,6 +401,32 @@
               
             }
 
+            //Cookie Helpers
+            function createCookie(name,value,days) {
+                if (days) {
+                    var date = new Date();
+                    date.setTime(date.getTime()+(days*24*60*60*1000));
+                    var expires = "; expires="+date.toGMTString();
+                }
+                else var expires = "";
+                document.cookie = name+"="+value+expires+"; path=/";
+            }
+
+            function readCookie(name) {
+                var nameEQ = name + "=";
+                var ca = document.cookie.split(';');
+                for(var i=0;i < ca.length;i++) {
+                    var c = ca[i];
+                    while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+                }
+                return null;
+            }
+
+            function eraseCookie(name) {
+                createCookie(name,"",-1);
+            }
+
 
             //////////////////////////////////////////////////////////////
             // User tracking
@@ -386,7 +439,9 @@
                     var userList = document.createElement('ul');
                     
                     for(var i = 0;i < people.length;i++) {
-                        //TODO: fix the ready bubble so it works
+                        // TODO: fix the ready bubble so it animates properly
+                        // To fix this I'd have to rewrite how the list is updated
+                        // It's superflous and would be complicated so not anytime soon
                         var userReady = people[i].ready ? ' ready-bubble--ready' : '';
                         $(userList).append('<li><span class="ready-bubble ' + userReady + '"></span>' + people[i].nick + '</li>');
                     }
@@ -421,6 +476,22 @@
             // Client notices server disconnect, displays correct screen
             socket.on('disconnect', function () {
               $("body").html('').append("Sorry, the Server just reset, please reload your browser to start the game");
+            });
+
+            socket.on('check cookie', function(d) {
+                var data_array = [];
+                var gameId = readCookie('secret-hitler-game');
+                var username = readCookie('username');
+
+                if(gameId) {
+                    data_array.push(gameId);
+                    if(username){
+                        data_array.push(username);
+                    }
+                    socket.emit('cookie success', data_array);                    
+                } else {
+                    socket.emit('cookie failed');    
+                }
             });
 
 
@@ -488,15 +559,28 @@
                 return false;
             });
 
-            // The server says someone has started the game, output who and boot to the game screen
-            socket.on('start game', function(data) {
-                // Set a cookie(localstorage) with the game number so if they disconnect they can rejoin
-                console.log(data)
-                document.cookie = "secret-hitler-game=" + data[1];
-                document.cookie = "username=" + data[0];
+            /* The server says someone has started the game, output who and boot to the game screen
+             The 'data' attribute stores:
+             [0] = The name of the player who started the game, or the name of the returning player, based on [2] (string)
+             [1] = The game id (string)
+             [2] = Whether the player is rejoining or not (boolean)
 
-                $('.shroud').hide();
-                 emitLocal('<span class="text--bold">' + data[0] + '</span> has started the game!');
+             */
+            socket.on('start game', function(data) {
+                // Set a cookie with the game number so if they disconnect they can rejoin
+                createCookie('secret-hitler-game',data[1],1);
+                createCookie('username', currentUser);
+
+                console.log(data);
+                // The third slot of the array dictates whether it's a rejoin or not
+                if(data[2]) {
+                    $('.shroud').hide();
+                    $("#username").text(data[0]);
+                    emitLocal('<span class="text--bold">' + data[0] + '</span> has rejoined the game!');
+                } else {
+                    $('.shroud').hide();
+                    emitLocal('<span class="text--bold">' + data[0] + '</span> has started the game!');
+                }
             });
 
 

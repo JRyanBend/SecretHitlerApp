@@ -1,4 +1,5 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
@@ -10,7 +11,10 @@ var no = 0;
 var ready = 0;
 var gameStarted = false;
 var gameId = "";
+var validUser = false;
 
+// Create path to static files
+app.use(express.static('public'))
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
@@ -22,8 +26,46 @@ io.emit("disconnecter", "reset");
 
 io.on('connection', function(socket){
 
-    // Check if max players, if under 10, proceed, if over 10 reject connection
+    // Game is in progress, but there's a possibility that they lost a player
+    if(current_user_count < 10 && gameStarted === true) {
+        // Check the user's cookie
+        socket.emit("check cookie", socket.id);
+
+        // They have a game id
+        socket.on('cookie success', function(data) {
+            if(data[0] == gameId) {
+                // If their gameId is the same as the current one, add them to the game
+                people.push({ "user_id": socket.id, "nick": data[1]});
+
+                // Probably uneccessary, just use the socket.emit
+                for(var i = 0;i < people.length;i++) {
+                    if(people[i].user_id == socket.id) {
+                        socket.emit("start game", [data[1], gameId, true]);
+                    }
+                }
+
+                io.emit("update users", people);
+                validUser = true;
+            } else {
+                // User has a valid game id, but it's not the current one
+                socket.emit("disconnecter", "full");
+                socket.disconnect(true);  
+            }
+        })
+
+        socket.on('cookie failed', function(data){
+            socket.emit("disconnecter", "full");
+            socket.disconnect(true); 
+        })
+    }
+
+
+    // Check if max players, if under 10, proceed, if over 10, reject connection
     if(current_user_count <= 10 && gameStarted === false) {
+        validUser = true;
+    }
+
+    if(validUser) {
         /////////////////////////////////////////////////////////////////////////
         // User Tracking
         /////////////////////////////////////////////////////////////////////////
@@ -175,7 +217,7 @@ io.on('connection', function(socket){
                 // If this person is ready
                 if(people[i].ready == true) {
                     // Emit the start game event to them
-                    io.to(people[i].user_id).emit("start game", [name, gameId]);
+                    io.to(people[i].user_id).emit("start game", [name, gameId, false]);
                 } else {
                     // If they're not ready disconnect them
                     io.to(people[i].user_id).emit("disconnecter", true);
@@ -244,10 +286,8 @@ io.on('connection', function(socket){
     } else { 
 
         console.log("People.length = " + people.length);
-        // Here we can check the cookie to see if the current gameId matches the one in the client, and reconnect them
-        //  TODO: Make this work!
 
-        // Too many players or game underway, refuse access
+        // Too many players or game underway and user isn't reconnecting, refuse access
         for(var i = 0;i < current_user_count;i++) {
             console.log("People id = " + people[i].user_id)
             console.log("Socket id = " + socket.id)
