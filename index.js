@@ -20,6 +20,13 @@ app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
+// Helper functions
+function getRandomIntInclusive(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // RESET FUNCTION
 // I want this to fire when the server restarts to reset all vars and connections
 io.emit("disconnecter", "reset");
@@ -93,8 +100,7 @@ io.on('connection', function(socket){
                 // Set the player in the people array
                 people.push({ "user_id": socket.id, "nick": nick, "ready": false });
                 io.emit("update users", people);
-                io.emit("name error", false); 
-                console.log(people);
+                socket.emit("name error", false); 
             } else {
                 // Since there are people now, check to see if there's any dupes
                 var dupe = 0 ;
@@ -102,20 +108,18 @@ io.on('connection', function(socket){
                     if(people[i].nick === nick) {
                         //if there are, set this flag
                         dupe = 1;
-                        console.log("dupe");
                     } 
                 }
 
                 // Check to see if the dupe flag was set
                 if(dupe) {
                     // There's a dupelicate name! Send an error to the client
-                    io.emit("name error", true);        
+                    socket.emit("name error", true);        
                 } else {
                     // All good, set the player in the people aray
                     people.push({ "user_id": socket.id, "nick": nick, "ready": false });
                     io.emit("update users", people);
-                    io.emit("name error", false); 
-                    console.log(people);
+                    socket.emit("name error", false); 
                 }
             }
         });
@@ -183,7 +187,7 @@ io.on('connection', function(socket){
                         people[i].ready = true;
                         ready++;
                         console.log("ready count: " + ready);
-                    }
+                    }  
                     
                 }
             }
@@ -212,12 +216,82 @@ io.on('connection', function(socket){
             // Create GameId
             gameId = Math.random().toString(36).substr(2, 5);
 
+            // Here we're going to assign them their allegiance/character
+            // This should definitely be it's own function somewhere else. But I'm still in the proof-of-concept phase and no one will ever see this so fuck it.
+            // First get a random number from 1 - ready to mark hitler
+            var secret_hitler = getRandomIntInclusive(1, ready);
+            console.log("secret hitler #: " + secret_hitler);
+            console.log("Ready: " +ready);
+            // Next cycle through the ready players and assign them random classes based on how many people there are
+            switch (ready) {
+                case 5:
+                var liberals = 3;
+                var fascists = 2;
+                console.log("Made it!");
+
+                for(var i = 0;i < ready;i++) {
+                    if(i === secret_hitler){ 
+                        people[i].team = "fascist";
+                        people[i].hitler = true;
+                        fascists--;
+                        console.log("Hitler!");
+                    } else {
+                        if(liberals > 0 && fascists > 0) {
+                            var allegiance_randomizer = Math.random() >= 0.5;
+                            if(allegiance_randomizer === true) {
+                                people[i].team = "liberal";
+                                liberals--;
+                                 console.log("liberal!");
+                            } else {
+                                people[i].team = "fascist";
+                                fascists--;
+                                console.log("fasral!");
+                            }
+                        } else {
+                            if(liberals > 0) {
+                                people[i].team = "liberal";
+                                liberals--;
+                                console.log("liberal2!");
+                            } else if(fascists > 0) {
+                                people[i].team = "fascist";
+                                fascists--;
+                                console.log("fasral2!");
+                            } else {
+                                console.log("Error: Your facist liberal count is off or something")
+                            }
+                        }
+                    }
+
+                }
+                break;
+              case 6:
+                console.log('Apples are $0.32 a pound.');
+                break;
+              case 7:
+                console.log('Bananas are $0.48 a pound.');
+                break;
+              case 8:
+                console.log('Cherries are $3.00 a pound.');
+                break;
+              case 9:
+
+              case 10:
+                console.log('Mangoes and papayas are $2.79 a pound.');
+                break;
+              default:
+                console.log('You started a game, but somehow you don\'t have 5 - 10 players. Something went wrong.');
+            }
+
             // Iterate over people array
             for(var i = 0;i < people.length;i++) {
                 // If this person is ready
                 if(people[i].ready == true) {
-                    // Emit the start game event to them
-                    io.to(people[i].user_id).emit("start game", [name, gameId, false]);
+                    if(people[i]["hitler"]) {
+                        // Emit the start game event to them
+                        io.to(people[i].user_id).emit("start game", [name, gameId, false, people[i].team, people[i].hitler]);
+                    } else {
+                        io.to(people[i].user_id).emit("start game", [name, gameId, false, people[i].team]);
+                    }   
                 } else {
                     // If they're not ready disconnect them
                     io.to(people[i].user_id).emit("disconnecter", true);
