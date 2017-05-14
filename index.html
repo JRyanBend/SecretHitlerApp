@@ -14,6 +14,7 @@
                         <label class="form__label">Please enter a nickname:</label>
                         <input id="nick" autocomplete="off" class="form__input" />
                         <p class="error" id="name_error">That name is already taken, please try another one</p>
+                        <p class="error" id="name_length_error">You have to enter a name to start</p>
                         <button class="button button--form">Let 'er Rip!</button>
                     </form>
                     <div class="user-ready" id="user-ready">
@@ -43,9 +44,11 @@
         <form id="send_msg" action="" class="chat">
             <input id="m" autocomplete="off" /><button>Send</button>
         </form>
-        <div id="player_card" class="player_card">
-            <h2>Your Team</h2>
-            <h3></h3>
+        <div id="player_card" class="player_card player_card--show">
+            <div class="player_card__title" id="player_card__title">
+                <h2>Your Team</h2>
+            </div>
+            <img id="player_card__team" class="player_card__team" src="img/Secret-Role-Liberal.jpg">
         </div>
 
         <script src="/socket.io/socket.io.js"></script>
@@ -100,16 +103,23 @@
 
             // Not sure where this belongs
             function updatePlayerCard(team, hitler) {
-                var player_card = $("#player_card");
                 if(team == "liberal") {
-                    player_card.find("h2").text("Liberal");
+                    $("#player_card__team").attr("src","img/Secret-Role-Liberal.jpg");
                 } else if (team == "fascist") {
-                    player_card.find("h2").text("Fascist");
+                    $("#player_card__team").attr("src","img/Secret-Role-Fascist.jpg");
                     if(hitler) {
-                        player_card.find("h3").text("Hitler!");
+                        $("#player_card__team").attr("src","img/Secret-Role-Hitler.jpg");
                     }
                 }
+                var height = "-" + ($("#player_card").height() - 48) + "px";
+                console.log("height: "+height);
+                $("#player_card").css("bottom", height);
             }
+
+            // Player Card: On click hide/show the player card
+            $("#player_card").on("click", function() {
+                $("#player_card").toggleClass("player_card--show");
+            });
 
 
             //////////////////////////////////////////////////////////////
@@ -192,13 +202,17 @@
                     socket.emit('nickname', currentUser);
                     return false;
                 } else {
-                  console.log("Has to be at least one character bra")
+                    $(".error").hide();
+                    $("#name_length_error").show();
+                    console.log("Has to be at least one character bra")
+                    return false;
                 }
             });
 
             // If nick already exists get them to try again
             socket.on("name error", function(isError) {
                 if(isError) {
+                    $(".error").hide();
                     // Tell the user that they need to pick a name that isn't in use
                     $("#name_error").show();
                 } else {

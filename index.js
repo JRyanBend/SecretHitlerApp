@@ -219,21 +219,20 @@ io.on('connection', function(socket){
             // Here we're going to assign them their allegiance/character
             // This should definitely be it's own function somewhere else. But I'm still in the proof-of-concept phase and no one will ever see this so fuck it.
             // First get a random number from 1 - ready to mark hitler
-            var secret_hitler = getRandomIntInclusive(1, ready);
+            var secret_hitler = getRandomIntInclusive(0, ready - 1);
             console.log("secret hitler #: " + secret_hitler);
             console.log("Ready: " +ready);
             // Next cycle through the ready players and assign them random classes based on how many people there are
             switch (ready) {
                 case 5:
                 var liberals = 3;
-                var fascists = 2;
+                var fascists = 1;
                 console.log("Made it!");
 
                 for(var i = 0;i < ready;i++) {
                     if(i === secret_hitler){ 
                         people[i].team = "fascist";
                         people[i].hitler = true;
-                        fascists--;
                         console.log("Hitler!");
                     } else {
                         if(liberals > 0 && fascists > 0) {

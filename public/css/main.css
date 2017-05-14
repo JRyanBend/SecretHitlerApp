@@ -76,6 +76,8 @@ h1,h2,h3,h4,h5 {
     background-color: #fff;
     border-radius: 3px;
     border: 1px solid #333;
+    margin-bottom: 20px;
+    padding: 5px;
 }
 
 
@@ -313,17 +315,37 @@ h1,h2,h3,h4,h5 {
 
 .player_card {
     position: fixed;
-    bottom:0;
+    bottom: -250px;
     left: 0;
     right: 0;
     margin: auto;
-    height: 300px;
+    min-height: 300px;
     width: 80%;
     background-color: #fff;
     border: 2px solid #333;
+    border-bottom: none;
     border-radius: 4px;
     text-align: center;
-    padding: 20px;
+    transition: all 0.5s;
+}
+
+.player_card--show {
+    bottom:0 !important;
+}
+
+.player_card__title {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+}
+
+.player_card__title h2 {
+    margin: 0;
+}
+
+.player_card__team {
+    width: 100%;
+    padding: 10px;
 }
 
 
