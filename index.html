@@ -151,7 +151,7 @@
 
             // When a disconnects, show a debrief screen
             socket.on('disconnecter', function(reason) {
-                console.log("Sorry we full!");
+                console.log("Disconnected Because:" + reason)
                 switch (reason) {
                     case "reset":
                         $("body").html('').append("Sorry, the Server just reset, please restart your browser to start the game");
@@ -173,16 +173,14 @@
               $("body").html('').append("Sorry, the Server just reset, please reload your browser to start the game");
             });
 
-            socket.on('check cookie', function(d) {
+            socket.on('check cookie', function(socketId) {
                 var data_array = [];
                 var gameId = readCookie('secret-hitler-game');
-                var username = readCookie('username');
+                var rejoinId = readCookie('rejoin-id');
 
                 if(gameId) {
                     data_array.push(gameId);
-                    if(username){
-                        data_array.push(username);
-                    }
+                    data_array.push(rejoinId);
                     socket.emit('cookie success', data_array);                    
                 } else {
                     socket.emit('cookie failed');    
@@ -263,12 +261,16 @@
              [0] = The name of the player who started the game, or the name of the returning player, based on [2] (string)
              [1] = The game id (string)
              [2] = Whether the player is rejoining or not (boolean)
+             [3] = rejoinId for rejoining the game
+             [4] = player is a liberal or fascist (string)
+             [5] = player is hitler (boolean)
 
              */
             socket.on('start game', function(data) {
                 // Set a cookie with the game number so if they disconnect they can rejoin
                 createCookie('secret-hitler-game',data[1],1);
                 createCookie('username', currentUser);
+                createCookie('rejoin-id', data[3],1);
 
                 console.log(data);
                 // The third slot of the array dictates whether it's a rejoin or not
@@ -281,12 +283,12 @@
                     emitLocal('<span class="text--bold">' + data[0] + '</span> has started the game!');
                 }
 
-                if(data[3] === "liberal") {
+                if(data[4] === "liberal") {
                     // Assign liberal card
-                    updatePlayerCard(data[3])
-                } else if (data[3] === "fascist") {
+                    updatePlayerCard(data[4])
+                } else if (data[4] === "fascist") {
                     // Assign Fasist card
-                    updatePlayerCard(data[3], data[4]);
+                    updatePlayerCard(data[4], data[5]);
                 } else {
                     console.log("Error: Something went wrong in team assignment");
                 }

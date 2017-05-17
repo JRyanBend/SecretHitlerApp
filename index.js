@@ -13,9 +13,11 @@ var gameStarted = false;
 var gameId = "";
 var validUser = false;
 
+// BASE EXPRESS FUNCTIONS
 // Create path to static files
 app.use(express.static('public'))
 
+// Routing? I'm not even sure what this does
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
@@ -27,12 +29,17 @@ function getRandomIntInclusive(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getComplexId(base, top) {
+    return Math.random().toString(36).substr(base, top);
+}
+
 // RESET FUNCTION
 // I want this to fire when the server restarts to reset all vars and connections
 io.emit("disconnecter", "reset");
 
 io.on('connection', function(socket){
 
+    console.log("Current usercount: " + current_user_count + " and gameStarted: "+ gameStarted);
     // Game is in progress, but there's a possibility that they lost a player
     if(current_user_count < 10 && gameStarted === true) {
         // Check the user's cookie
@@ -40,14 +47,18 @@ io.on('connection', function(socket){
 
         // They have a game id
         socket.on('cookie success', function(data) {
+            console.log("Cokie suces")
             if(data[0] == gameId) {
+                console.log("data = gameid suces")
                 // If their gameId is the same as the current one, add them to the game
-                people.push({ "user_id": socket.id, "nick": data[1]});
-
+                //people.push({ "user_id": socket.id, "nick": data[1]});
+                console.log(people);
                 // Probably uneccessary, just use the socket.emit
                 for(var i = 0;i < people.length;i++) {
-                    if(people[i].user_id == socket.id) {
-                        socket.emit("start game", [data[1], gameId, true]);
+                    if(people[i].rejoin_id == data[1]) {
+                        console.log("gam start")
+                        people[i].user_id = socket.id;
+                        socket.emit("start game", [people[i].nick, gameId, true]);
                     }
                 }
 
@@ -141,7 +152,6 @@ io.on('connection', function(socket){
                             io.emit('remove start')
                         }
                     }
-                    people.splice(i, 1);
                 }
             }
 
@@ -214,7 +224,21 @@ io.on('connection', function(socket){
         // User has clicked 'Start Game!' push all users to the game screen
         socket.on('game started', function(name) {
             // Create GameId
-            gameId = Math.random().toString(36).substr(2, 5);
+            gameId = getComplexId(2, 5)
+
+            console.log(people);
+            // Trim the non ready users
+            for(var i = 0;i < people.length;i++) {
+                // If this person is ready
+                console.log(i);
+                if(people[i].ready != true) {
+                    // If they're not ready disconnect them
+                    io.to(people[i].user_id).emit("disconnecter", "started");
+
+                    // splice the user from the array
+                    people.splice(i, 1);   
+                }
+            }
 
             // Here we're going to assign them their allegiance/character
             // This should definitely be it's own function somewhere else. But I'm still in the proof-of-concept phase and no one will ever see this so fuck it.
@@ -264,18 +288,18 @@ io.on('connection', function(socket){
                 }
                 break;
               case 6:
-                console.log('Apples are $0.32 a pound.');
+                console.log('6 player game');
                 break;
               case 7:
-                console.log('Bananas are $0.48 a pound.');
+                console.log('7 player game');
                 break;
               case 8:
-                console.log('Cherries are $3.00 a pound.');
+                console.log('8 player game');
                 break;
               case 9:
-
+                console.log('9 player game');
               case 10:
-                console.log('Mangoes and papayas are $2.79 a pound.');
+                console.log('10 player game');
                 break;
               default:
                 console.log('You started a game, but somehow you don\'t have 5 - 10 players. Something went wrong.');
@@ -283,20 +307,22 @@ io.on('connection', function(socket){
 
             // Iterate over people array
             for(var i = 0;i < people.length;i++) {
-                // If this person is ready
-                if(people[i].ready == true) {
-                    if(people[i]["hitler"]) {
-                        // Emit the start game event to them
-                        io.to(people[i].user_id).emit("start game", [name, gameId, false, people[i].team, people[i].hitler]);
-                    } else {
-                        io.to(people[i].user_id).emit("start game", [name, gameId, false, people[i].team]);
-                    }   
+                // Generate unique rejoin ID
+                var rejoinId = getComplexId(1, 4);
+
+                // Amend rejoin ID to object property
+                people[i]["rejoin_id"] = rejoinId;
+
+                // Emit the start game event to all players
+                if(people[i]["hitler"]) {
+                    // Emit the start game event to them
+                    io.to(people[i].user_id).emit("start game", [name, gameId, false, people[i].rejoin_id, people[i].team, people[i].hitler]);
                 } else {
-                    // If they're not ready disconnect them
-                    io.to(people[i].user_id).emit("disconnecter", true);
-                    io.to(people[i].user_id).emit(true);  
-                }
+                    io.to(people[i].user_id).emit("start game", [name, gameId, false, people[i].rejoin_id, people[i].team]);
+                }   
+
             }
+            console.log(people);
 
             gameStarted = true;
             console.log(name + " has started the game. There are " + ready + " players in this game.");
