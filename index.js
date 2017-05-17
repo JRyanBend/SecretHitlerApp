@@ -152,6 +152,9 @@ io.on('connection', function(socket){
                             io.emit('remove start')
                         }
                     }
+                    if(!gameStarted) {
+                        people.splice(i,1);
+                    }
                 }
             }
 
