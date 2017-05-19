@@ -40,15 +40,30 @@
             <div id="username" class="username text-large"></div>
             <div class="menu" id="menu">Menu</div>
         </header>
+
         <ul id="messages" class="messages"></ul>
         <form id="send_msg" action="" class="chat">
             <input id="m" autocomplete="off" /><button>Send</button>
         </form>
+
         <div id="player_card" class="player_card player_card--show">
             <div class="player_card__title" id="player_card__title">
                 <h2>Your Team</h2>
             </div>
             <img id="player_card__team" class="player_card__team" src="img/Secret-Role-Liberal.jpg">
+        </div>
+
+        <!-- Should probably be generating these with javascript -->
+        <div id="chancellor_select" class="chancellor_vote">
+            <h2>Chancellor Vote!</h2>
+            <div id="ja" class="button">Ja!</div>
+            <div id="nein" class="button">Nein!</div>
+        </div>
+
+        <div id="chancellor_vote" class="chancellor_vote">
+            <h2>Chancellor Vote!</h2>
+            <div id="ja" class="button">Ja!</div>
+            <div id="nein" class="button">Nein!</div>
         </div>
 
         <script src="/socket.io/socket.io.js"></script>
@@ -333,6 +348,26 @@
       	    socket.on('chat message', function(msg) {
                 $('#messages').append($('<li>').html(msg));
       	    });
+
+
+            // Chancellor Select
+            // Choose a chancellor from a list
+            // Generate a list of players, minus this player, and let them choose
+            // probably have a confirmation dialog to make sure
+
+
+            // Chancellor Vote
+            socket.on('chancellor call', function() {
+                $("#chancellor_vote").show();
+            });
+
+            $("#ja").on("click", function() {
+                socket.emit('chancellor vote', true);
+            });
+
+            $("#nein").on("click", function() {
+                socket.emit('chancellor vote', false);
+            });
 
 
             // Call a vote

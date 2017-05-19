@@ -329,6 +329,11 @@ io.on('connection', function(socket){
 
             gameStarted = true;
             console.log(name + " has started the game. There are " + ready + " players in this game.");
+
+            // Fire off the first chancellor vote
+            // Select a random player and emit that socket call to them
+            var random_starting_player = getRandomIntInclusive(0, people.length);
+            io.to(people[random_starting_player].user_id).emit("chancellor select");
         });
 
 
@@ -336,6 +341,7 @@ io.on('connection', function(socket){
         // Game Logic
         /////////////////////////////////////////////////////////////////////////
 
+        /* Old test voting
         // Call for a vote
         socket.on('call vote', function(test) {
             console.log("Vote called");
@@ -347,6 +353,35 @@ io.on('connection', function(socket){
 
         // User has voted
         socket.on('voted', function(vote) {
+            if(vote) {
+                console.log("Voted Yes");
+                yes++;
+            } else {
+                console.log("Voted No");
+                no++;
+            }
+            votes++;
+
+            console.log("people.length = " + people.length);
+            console.log("votes = " + votes);
+
+            if (votes === people.length) {
+                if(yes > no) {
+                    console.log("The Ja's have it!");
+                    io.emit("vote complete", true);
+                } else {
+                    console.log("The Nein's have it!");
+                    io.emit("vote complete", false);
+                }
+                votes = 0;
+                yes = 0;
+                no = 0;
+                console.log("Vote has concluded, values should be reset.");
+            }
+        }); */
+
+        // Vote has been collected
+        socket.on('call vote', function(vote) {
             if(vote) {
                 console.log("Voted Yes");
                 yes++;
