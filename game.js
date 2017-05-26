@@ -10,17 +10,15 @@ function allegianceRandomizer() {
 	return Math.random() >= 0.5;
 }
 
-Game.prototype.teamOrganizer = function(player_list, liberals, fascists, secretHitler) {
+Game.prototype.teamOrganizer = function(playerList, liberals, fascists, secretHitler) {
 	var liberals = liberals;
 	var fascists = fascists;
 	var players = liberals + fascists + 1;
 	var secretHitler = secretHitler;
-    Players.setPlayers(player_list);
+    Players.setPlayers(playerList);
 
-	console.log("DID YO MAKE IT?")
-	console.log(player_list);
-	console.log("Players length:"+ players.length);
-	console.log(secretHitler + " " + liberals + " " + fascists);
+    console.log("Player List:");
+	console.log(playerList);
 
 	for(var i = 0;i < players;i++) {
         if(i === secretHitler){ 
@@ -37,7 +35,7 @@ Game.prototype.teamOrganizer = function(player_list, liberals, fascists, secretH
                 } else {
                     Players.modifyPlayer(i, "team", "fascist");
                     fascists--;
-                    console.log("fasral!");
+                    console.log("fascist!");
                 }
             } else {
                 if(liberals > 0) {
@@ -47,9 +45,9 @@ Game.prototype.teamOrganizer = function(player_list, liberals, fascists, secretH
                 } else if(fascists > 0) {
                     Players.modifyPlayer(i, "team", "fascist");
                     fascists--;
-                    console.log("fasral2!");
+                    console.log("fascist2!");
                 } else {
-                    console.log("Error: Your facist liberal count is off or something")
+                    console.error("Error: Your facist/liberal count is off or something")
                 }
             }
         }

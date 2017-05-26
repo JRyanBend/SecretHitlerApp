@@ -54,10 +54,8 @@
         </div>
 
         <!-- Should probably be generating these with javascript -->
-        <div id="chancellor_select" class="chancellor_vote">
-            <h2>Chancellor Vote!</h2>
-            <div id="ja" class="button">Ja!</div>
-            <div id="nein" class="button">Nein!</div>
+        <div id="chancellor_select" class="chancellor_select">
+            <div id="player_select_list"></div>
         </div>
 
         <div id="chancellor_vote" class="chancellor_vote">
@@ -357,7 +355,7 @@
 
 
             // Chancellor Vote
-            socket.on('chancellor call', function() {
+            socket.on('chancellor select', function() {
                 $("#chancellor_vote").show();
             });
 

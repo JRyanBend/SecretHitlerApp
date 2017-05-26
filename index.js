@@ -45,6 +45,7 @@ io.emit("disconnecter", "reset");
 io.on('connection', function(socket){
 
     console.log("Current usercount: " + current_user_count + " and gameStarted: "+ gameStarted);
+
     // Game is in progress, but there's a possibility that they lost a player
     if(current_user_count < 10 && gameStarted === true) {
         // Check the user's cookie
@@ -93,7 +94,7 @@ io.on('connection', function(socket){
         // User Tracking
         /////////////////////////////////////////////////////////////////////////
 
-        // On connection, update everyones user list
+        // On connection, update everyone'  s user list
         io.emit('update users', players);
 
 
@@ -129,7 +130,7 @@ io.on('connection', function(socket){
 
                 // Check to see if the dupe flag was set
                 if(dupe) {
-                    // There's a dupelicate name! Send an error to the client
+                    // There's a duplicate name! Send an error to the client
                     socket.emit("name error", true);        
                 } else {
                     // All good, set the player in the players aray
@@ -292,7 +293,7 @@ io.on('connection', function(socket){
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 default:
-                console.log('You started a game, but somehow you don\'t have 5 - 10 players. Something went wrong.');
+                console.error('You started a game, but somehow you don\'t have 5 - 10 players. Something went wrong.');
             }
 
             // Iterate over players array
@@ -320,8 +321,8 @@ io.on('connection', function(socket){
             // Fire off the first chancellor vote
             // Select a random player and emit that socket call to them
 ///////////////// WAS BREAKING STUFF SO COMMENTED OUT FOR NOW
-            // var random_starting_player = getRandomIntInclusive(0, players.length);
-            // io.to(players[random_starting_player].user_id).emit("chancellor select");
+            var random_starting_player = getRandomIntInclusive(0, players.length);
+            io.to(players[random_starting_player].user_id).emit("chancellor select");
         });
 
 
