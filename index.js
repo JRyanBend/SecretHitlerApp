@@ -94,7 +94,7 @@ io.on('connection', function(socket){
         // User Tracking
         /////////////////////////////////////////////////////////////////////////
 
-        // On connection, update everyone'  s user list
+        // On connection, update everyone's user list
         io.emit('update users', players);
 
 
@@ -246,48 +246,50 @@ io.on('connection', function(socket){
             // This should definitely be it's own function somewhere else. But I'm still in the proof-of-concept phase and no one will ever see this so fuck it.
             // First get a random number from 1 - ready to mark hitler
             var secretHitler = getRandomIntInclusive(0, ready - 1);
+            var fascist;
+            var liberal;
             console.log("secret hitler #: " + secretHitler);
             console.log("Ready: " +ready);
 
             // Next cycle through the ready players and assign them random classes based on how many players there are
             switch (ready) {
                 case 5:
-                    var liberals = 3;
-                    var fascists = 1;
+                    liberals = 3;
+                    fascists = 1;
                     console.log("Game organizer: " + ready);
 
                     players = game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 case 6:
-                    var liberals = 3;
-                    var fascists = 2;
+                    liberals = 3;
+                    fascists = 2;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 case 7:
-                    var liberals = 4;
+                    liberals = 4;
                     var fascists = 2;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 case 8:
-                    var liberals = 4;
-                    var fascists = 3;
+                    liberals = 4;
+                    fascists = 3;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 case 9:
-                    var liberals = 5;
-                    var fascists = 3;
+                    liberals = 5;
+                    fascists = 3;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                 case 10:
-                    var liberals = 5;
-                    var fascists = 4;
+                    liberals = 5;
+                    fascists = 4;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
@@ -322,7 +324,9 @@ io.on('connection', function(socket){
             // Select a random player and emit that socket call to them
 ///////////////// WAS BREAKING STUFF SO COMMENTED OUT FOR NOW
             var random_starting_player = getRandomIntInclusive(0, players.length);
-            io.to(players[random_starting_player].user_id).emit("chancellor select");
+            console.log("Starting player " + random_starting_player);
+            io.to(players[random_starting_player].user_id).emit("chancellor select", Players.getPlayers());
+
         });
 
 

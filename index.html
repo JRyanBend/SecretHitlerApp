@@ -11,7 +11,7 @@
                 <img class="logo" src="img/SecretHitlerLogo.png">
                 <div class="intro__form">
                     <form id="nickname" class="form form--nickname">
-                        <label class="form__label">Please enter a nickname:</label>
+                        <label class="form__label">Please enter a nickname penis:</label>
                         <input id="nick" autocomplete="off" class="form__input" />
                         <p class="error" id="name_error">That name is already taken, please try another one</p>
                         <p class="error" id="name_length_error">You have to enter a name to start</p>
@@ -55,9 +55,12 @@
 
         <!-- Should probably be generating these with javascript -->
         <div id="chancellor_select" class="chancellor_select">
-            <div id="player_select_list"></div>
+            <h2>Select your chancellor:</h2>
+            <div id="chancellor_select__list" class="chancellor_select__list"></div>
         </div>
 
+        <!-- After vote, create closed list of vote results, for later consultation -->
+        <!-- Might make this toggle-able as this might be overpowered -->
         <div id="chancellor_vote" class="chancellor_vote">
             <h2>Chancellor Vote!</h2>
             <div id="ja" class="button">Ja!</div>
@@ -114,6 +117,7 @@
                 createCookie(name,"",-1);
             }
 
+            // Updating the player card
             // Not sure where this belongs
             function updatePlayerCard(team, hitler) {
                 if(team == "liberal") {
@@ -134,31 +138,46 @@
                 $("#player_card").toggleClass("player_card--show");
             });
 
+            function updatePlayerList(people, list) {
+                console.log(people);
+                console.log(list);
+
+                var userList = document.createElement('ul');
+
+                if(list === "basic") {
+                    if(people.length) {                      
+                        for(var i = 0;i < people.length;i++) {
+                            // TODO: fix the ready bubble so it animates properly
+                            // To fix this I'd have to rewrite how the list is updated
+                            // It's superflous and would be complicated so not anytime soon
+                            var userReady = people[i].ready ? ' ready-bubble--ready' : '';
+                            $(userList).append('<li><span class="ready-bubble ' + userReady + '"></span>' + people[i].nick + '</li>');
+                        }
+
+                        // TODO: This is super ugly. fix it. Also it doesn't seem to work properly
+                        $("#user_list").html('').append(userList);
+                        $("#user_list2").html('');
+                        $("#user_list").clone().appendTo("#user_list2");
+                    }
+                } else if(list === "select") {
+                    for(var i = 0;i < people.length;i++) {
+                        // TODO: fix the ready bubble so it animates properly
+                        // To fix this I'd have to rewrite how the list is updated
+                        // It's superflous and would be complicated so not anytime soon
+                        $(userList).append('<li>' + people[i].nick + '</li>');
+                    }
+                    $("#chancellor_select__list").html('').append(userList);
+                }
+            }
+
 
             //////////////////////////////////////////////////////////////
             // User tracking
             //////////////////////////////////////////////////////////////
 
             // When a user connects/disconnects, update the 'Currently Online' sidebar
-            socket.on('update users', function(people) {
-                console.log(people);
-                
-                if(people.length) {
-                    var userList = document.createElement('ul');
-                    
-                    for(var i = 0;i < people.length;i++) {
-                        // TODO: fix the ready bubble so it animates properly
-                        // To fix this I'd have to rewrite how the list is updated
-                        // It's superflous and would be complicated so not anytime soon
-                        var userReady = people[i].ready ? ' ready-bubble--ready' : '';
-                        $(userList).append('<li><span class="ready-bubble ' + userReady + '"></span>' + people[i].nick + '</li>');
-                    }
-
-                    // TODO: This is super ugly. fix it. Also it doesn't seem to work properly
-                    $("#user_list").html('').append(userList);
-                    $("#user_list2").html('');
-                    $("#user_list").clone().appendTo("#user_list2");
-                }
+            socket.on('update users', function(players) {
+                updatePlayerList(players, "basic");
             });
 
 
@@ -277,7 +296,6 @@
              [3] = rejoinId for rejoining the game
              [4] = player is a liberal or fascist (string)
              [5] = player is hitler (boolean)
-
              */
             socket.on('start game', function(data) {
                 // Set a cookie with the game number so if they disconnect they can rejoin
@@ -352,10 +370,15 @@
             // Choose a chancellor from a list
             // Generate a list of players, minus this player, and let them choose
             // probably have a confirmation dialog to make sure
+            socket.on('chancellor select', function(players) {
+                console.log("MAKE IT!")
+                updatePlayerList(players, "select");
+                $("#chancellor_select").show();
+            });
 
 
             // Chancellor Vote
-            socket.on('chancellor select', function() {
+            socket.on('chancellor vote', function() {
                 $("#chancellor_vote").show();
             });
 
