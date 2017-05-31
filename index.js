@@ -31,7 +31,7 @@ app.get('/', function(req, res) {
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min)) + min;
 }
 
 function getComplexId(base, top) {
@@ -245,7 +245,7 @@ io.on('connection', function(socket){
             // Here we're going to assign them their allegiance/character
             // This should definitely be it's own function somewhere else. But I'm still in the proof-of-concept phase and no one will ever see this so fuck it.
             // First get a random number from 1 - ready to mark hitler
-            var secretHitler = getRandomIntInclusive(0, ready - 1);
+            var secretHitler = getRandomIntInclusive(0, ready);
             var fascist;
             var liberal;
             console.log("secret hitler #: " + secretHitler);
@@ -326,7 +326,7 @@ io.on('connection', function(socket){
             var random_starting_player = getRandomIntInclusive(0, players.length);
             console.log("Starting player " + random_starting_player);
             io.to(players[random_starting_player].user_id).emit("chancellor select", Players.getPlayers());
-
+            players[random_starting_player]["president"] = true;
         });
 
 
@@ -372,6 +372,22 @@ io.on('connection', function(socket){
                 console.log("Vote has concluded, values should be reset.");
             }
         }); */
+
+        // Call for a vote
+        socket.on('chancellor chosen', function(player) {
+            console.log("Vote called");
+            console.log(players);
+            console.log(players.length);
+            for(var i = 0;i < players.length;i++) {
+                console.log("in the loop")
+                console.log(players[i])
+                if(players[i].president !== true) {
+                    console.log("in the if")
+                    io.to(players[i].user_id).emit("chancellor vote", player);
+                }
+            } 
+            
+        });
 
         // Vote has been collected
         socket.on('call vote', function(vote) {

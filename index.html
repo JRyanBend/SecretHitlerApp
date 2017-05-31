@@ -54,17 +54,21 @@
         </div>
 
         <!-- Should probably be generating these with javascript -->
-        <div id="chancellor_select" class="chancellor_select">
-            <h2>Select your chancellor:</h2>
-            <div id="chancellor_select__list" class="chancellor_select__list"></div>
+        <div id="chancellor_select" class="fullscreen_popup">
+            <div class="chancellor_select">
+                <h2>Select your chancellor:</h2>
+                <div id="chancellor_select__list" class="chancellor_select__list"></div>
+            </div>
         </div>
 
         <!-- After vote, create closed list of vote results, for later consultation -->
         <!-- Might make this toggle-able as this might be overpowered -->
-        <div id="chancellor_vote" class="chancellor_vote">
-            <h2>Chancellor Vote!</h2>
-            <div id="ja" class="button">Ja!</div>
-            <div id="nein" class="button">Nein!</div>
+        <div id="chancellor_vote" class="fullscreen_popup">
+            <div class="chancellor_select">
+                <h2>Blank has chosen blank, what say you?</h2>
+                <div id="ja" class="button">Ja!</div>
+                <div id="nein" class="button">Nein!</div>
+            </div>
         </div>
 
         <script src="/socket.io/socket.io.js"></script>
@@ -164,7 +168,7 @@
                         // TODO: fix the ready bubble so it animates properly
                         // To fix this I'd have to rewrite how the list is updated
                         // It's superflous and would be complicated so not anytime soon
-                        $(userList).append('<li>' + people[i].nick + '</li>');
+                        $(userList).append('<li class="possible_chancellor">' + people[i].nick + '</li>');
                     }
                     $("#chancellor_select__list").html('').append(userList);
                 }
@@ -374,12 +378,26 @@
                 console.log("MAKE IT!")
                 updatePlayerList(players, "select");
                 $("#chancellor_select").show();
+
+                // Attach the event to the list items
+                $('.possible_chancellor').on("click", function(e){
+                    console.log(e.target.firstChild.nodeValue);
+
+                    // Send the selected chancellor's name back to the server
+                    // TODO: Might want to add a confimartion dialog
+                    socket.emit('chancellor chosen', e.target.firstChild.nodeValue);
+                    $("#chancellor_select").hide();
+                });
             });
+
+            
+
 
 
             // Chancellor Vote
-            socket.on('chancellor vote', function() {
+            socket.on('chancellor vote', function(name) {
                 $("#chancellor_vote").show();
+                console.log(name);
             });
 
             $("#ja").on("click", function() {
