@@ -65,7 +65,7 @@
         <!-- Might make this toggle-able as this might be overpowered -->
         <div id="chancellor_vote" class="fullscreen_popup">
             <div class="chancellor_select">
-                <h2>Blank has chosen blank, what say you?</h2>
+                <h2><span id="current_president">Blank</span> chosen <span id="chancellor_candidate">blank</span> as the candidate for chancellor.</h2>
                 <div id="ja" class="button">Ja!</div>
                 <div id="nein" class="button">Nein!</div>
             </div>
@@ -164,12 +164,16 @@
                         $("#user_list").clone().appendTo("#user_list2");
                     }
                 } else if(list === "select") {
+                    // Get the username of the current player (There has GOT to be a better way)
+                    current_user = $("#username").text() || "";
+
                     for(var i = 0;i < people.length;i++) {
-                        // TODO: fix the ready bubble so it animates properly
-                        // To fix this I'd have to rewrite how the list is updated
-                        // It's superflous and would be complicated so not anytime soon
-                        $(userList).append('<li class="possible_chancellor">' + people[i].nick + '</li>');
+                        // Add all players except the one choosing the chancellor to the list
+                        if(people[i].nick !== current_user) {
+                            $(userList).append('<li class="possible_chancellor">' + people[i].nick + '</li>');
+                        }
                     }
+                    // Actually add the list to the dom
                     $("#chancellor_select__list").html('').append(userList);
                 }
             }
@@ -385,7 +389,7 @@
 
                     // Send the selected chancellor's name back to the server
                     // TODO: Might want to add a confimartion dialog
-                    socket.emit('chancellor chosen', e.target.firstChild.nodeValue);
+                    socket.emit('chancellor chosen', $("#username").text(), e.target.firstChild.nodeValue);
                     $("#chancellor_select").hide();
                 });
             });
@@ -395,9 +399,17 @@
 
 
             // Chancellor Vote
-            socket.on('chancellor vote', function(name) {
+            // Evnet has been sent from server, select 'Ja'or 'Nein'
+            socket.on('chancellor vote', function(pres, chanc) {
+                // Contextualize text in cas you are the president
+                var is_it_you = pres === $("#username").text() ? "You have" : pres + " has";
+
+                // Display the vote dialog and set text nodes with proper values
                 $("#chancellor_vote").show();
-                console.log(name);
+                $("#current_president").text(is_it_you);
+                $("#chancellor_candidate").text(chanc);
+
+
             });
 
             $("#ja").on("click", function() {

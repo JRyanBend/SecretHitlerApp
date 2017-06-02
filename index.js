@@ -374,18 +374,12 @@ io.on('connection', function(socket){
         }); */
 
         // Call for a vote
-        socket.on('chancellor chosen', function(player) {
+        // Accepts the president and chancellors names then emits an event to all players
+        socket.on('chancellor chosen', function(pres, chanc) {
             console.log("Vote called");
-            console.log(players);
-            console.log(players.length);
-            for(var i = 0;i < players.length;i++) {
-                console.log("in the loop")
-                console.log(players[i])
-                if(players[i].president !== true) {
-                    console.log("in the if")
-                    io.to(players[i].user_id).emit("chancellor vote", player);
-                }
-            } 
+
+            // Send to all a dialog to ja or nain the presidents choice for chancellor
+            io.emit("chancellor vote", pres, chanc);
             
         });
 
