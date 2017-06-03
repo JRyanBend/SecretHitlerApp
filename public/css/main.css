@@ -85,6 +85,10 @@ h1,h2,h3,h4,h5 {
 .header {
     min-height: 2.5em;
     background-color: #333;
+    z-index: 1;
+    position: fixed;
+    width: 100%;
+    top: 0;
 }
 
 .header .username {
@@ -133,6 +137,7 @@ h1,h2,h3,h4,h5 {
     list-style-type: none; 
     margin: 0; 
     padding: 0; 
+    margin-top: 2.5em;
 }
 
 #messages li { 
@@ -329,6 +334,7 @@ h1,h2,h3,h4,h5 {
     border-radius: 4px;
     text-align: center;
     transition: all 0.5s;
+    z-index: 1;
 }
 
 .player_card--show {

@@ -17,6 +17,9 @@ var ready = 0;
 var gameStarted = false;
 var gameId = "";
 var validUser = false;
+var current_president;
+var current_chancellor_candidate;
+var current_chancellor;
 
 // BASE EXPRESS FUNCTIONS
 // Create path to static files
@@ -322,11 +325,11 @@ io.on('connection', function(socket){
 
             // Fire off the first chancellor vote
             // Select a random player and emit that socket call to them
-///////////////// WAS BREAKING STUFF SO COMMENTED OUT FOR NOW
             var random_starting_player = getRandomIntInclusive(0, players.length);
             console.log("Starting player " + random_starting_player);
             io.to(players[random_starting_player].user_id).emit("chancellor select", Players.getPlayers());
             players[random_starting_player]["president"] = true;
+            current_president = players[random_starting_player];
         });
 
 
@@ -341,43 +344,15 @@ io.on('connection', function(socket){
             io.emit("vote called", "data");
 
             console.log("votes = " + votes);
-        });
+        });*/
 
-
-        // User has voted
-        socket.on('voted', function(vote) {
-            if(vote) {
-                console.log("Voted Yes");
-                yes++;
-            } else {
-                console.log("Voted No");
-                no++;
-            }
-            votes++;
-
-            console.log("players.length = " + players.length);
-            console.log("votes = " + votes);
-
-            if (votes === players.length) {
-                if(yes > no) {
-                    console.log("The Ja's have it!");
-                    io.emit("vote complete", true);
-                } else {
-                    console.log("The Nein's have it!");
-                    io.emit("vote complete", false);
-                }
-                votes = 0;
-                yes = 0;
-                no = 0;
-                console.log("Vote has concluded, values should be reset.");
-            }
-        }); */
 
         // Call for a vote
         // Accepts the president and chancellors names then emits an event to all players
         socket.on('chancellor chosen', function(pres, chanc) {
             console.log("Vote called");
 
+            current_chancellor_candidate = Players.getPlayerWithNick(chanc).nick;
             // Send to all a dialog to ja or nain the presidents choice for chancellor
             io.emit("chancellor vote", pres, chanc);
             
@@ -411,6 +386,35 @@ io.on('connection', function(socket){
                 console.log("Vote has concluded, values should be reset.");
             }
         });
+
+        // User has voted
+        socket.on('chancellor vote', function(vote) {
+            if(vote) {
+                console.log("Voted Yes");
+                yes++;
+            } else {
+                console.log("Voted No");
+                no++;
+            }
+            votes++;
+
+            console.log("players.length = " + players.length);
+            console.log("votes = " + votes);
+
+            if (votes >= players.length) {
+                if(yes > no) {
+                    console.log("The Ja's have it! " + current_chancellor_candidate + " was elected!");
+                    io.emit("vote complete", true, current_chancellor_candidate);
+                } else {
+                    console.log("The Nein's have it! " + current_chancellor_candidate + " was not elected :(");
+                    io.emit("vote complete", false, current_chancellor_candidate);
+                }
+                votes = 0;
+                yes = 0;
+                no = 0;
+                console.log("Vote has concluded, values should be reset.");
+            }
+        }); 
 
 
         // When message submitted, emits to entire userbase

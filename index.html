@@ -297,7 +297,7 @@
             });
 
             /* The server says someone has started the game, output who and boot to the game screen
-             The 'data' attribute stores:
+             The 'data' parameter stores:
              [0] = The name of the player who started the game, or the name of the returning player, based on [2] (string)
              [1] = The game id (string)
              [2] = Whether the player is rejoining or not (boolean)
@@ -408,8 +408,6 @@
                 $("#chancellor_vote").show();
                 $("#current_president").text(is_it_you);
                 $("#chancellor_candidate").text(chanc);
-
-
             });
 
             $("#ja").on("click", function() {
@@ -428,34 +426,14 @@
             });
 
 
-            //Vote call successful, display vote ui
-            socket.on('vote called', function(msg) {
-                // Disable vote button for all
-                $('#call_vote').attr("disabled");
-
-                $('#messages').append($('<li>').html('<div class="votes"><h4><span>{{Nickname}}</span> has nominated <span>{{other name}}</span> for chancellor</h4><button id="vote_yes">JA!</button><button id="vote_no">NEIN!</button></div>'));
-
-                 // Handle a vote
-                $(document).on("click","#vote_yes", function() {
-                    console.log("Voted Yes")
-                    socket.emit('voted', true);
-                    return false;
-                });
-                $(document).on("click","#vote_no", function() {
-                    console.log("Voted no")
-                    socket.emit('voted', false);
-                    return false;
-                });
-            });
-
-
             //Vote complete, display vote completion ui
-            socket.on('vote complete', function(result) {
-
+            socket.on('vote complete', function(result, chancellor) {
                 var results = result ? "Ja" : "Nein";
+                var script = result ? chancellor + ' is the new chancellor! All hail!' : chancellor + ' has failed in his bid to become chancellor!'
 
                 // Replace with full screen ui, just hide and show as neccessary
-                $('#messages').append($('<li>').html('<div class="votes"><h4>The ' + results + 's have it!</h4></div>'));
+                $('#messages').append($('<li>').html('<div class="votes"><h4>The ' + results + 's have it! ' + script + '</h4></div>'));
+                $("#chancellor_vote").hide();
             });
         });
         </script>
