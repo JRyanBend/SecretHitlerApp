@@ -41,8 +41,6 @@ Players.prototype.getPlayerWithNick = function(nick) {
     var player;
 
     this.playerList.forEach(function(element, index, array) {
-        console.log("Players prototype element " + element.nick);
-        console.log("Players prototype nick " + nick);
         if (element.nick == nick) {
             console.log("Why isn't this returning?")
             player = element;

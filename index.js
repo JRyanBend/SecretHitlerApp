@@ -17,9 +17,10 @@ var ready = 0;
 var gameStarted = false;
 var gameId = "";
 var validUser = false;
-var current_president;
-var current_chancellor_candidate;
-var current_chancellor;
+var currentPresident;
+var currentChancellorCandidate;
+var currentChancellor;
+var voteRecord = [];
 
 // BASE EXPRESS FUNCTIONS
 // Create path to static files
@@ -329,7 +330,7 @@ io.on('connection', function(socket){
             console.log("Starting player " + random_starting_player);
             io.to(players[random_starting_player].user_id).emit("chancellor select", Players.getPlayers());
             players[random_starting_player]["president"] = true;
-            current_president = players[random_starting_player];
+            currentPresident = players[random_starting_player];
         });
 
 
@@ -352,8 +353,8 @@ io.on('connection', function(socket){
         socket.on('chancellor chosen', function(pres, chanc) {
             console.log("Vote called");
 
-            current_chancellor_candidate = Players.getPlayerWithNick(chanc).nick;
-            // Send to all a dialog to ja or nain the presidents choice for chancellor
+            currentChancellorCandidate = Players.getPlayerWithNick(chanc).nick;
+            // Send to all a dialog to ja or nein the presidents choice for chancellor
             io.emit("chancellor vote", pres, chanc);
             
         });
@@ -388,7 +389,7 @@ io.on('connection', function(socket){
         });
 
         // User has voted
-        socket.on('chancellor vote', function(vote) {
+        socket.on('chancellor vote', function(vote, name) {
             if(vote) {
                 console.log("Voted Yes");
                 yes++;
@@ -398,16 +399,19 @@ io.on('connection', function(socket){
             }
             votes++;
 
+            voteRecord.push([name, vote]);
+            console.log(voteRecord)
+
             console.log("players.length = " + players.length);
             console.log("votes = " + votes);
 
             if (votes >= players.length) {
                 if(yes > no) {
-                    console.log("The Ja's have it! " + current_chancellor_candidate + " was elected!");
-                    io.emit("vote complete", true, current_chancellor_candidate);
+                    console.log("The Ja's have it! " + currentChancellorCandidate + " was elected!");
+                    io.emit("vote complete", true, currentChancellorCandidate, voteRecord);
                 } else {
-                    console.log("The Nein's have it! " + current_chancellor_candidate + " was not elected :(");
-                    io.emit("vote complete", false, current_chancellor_candidate);
+                    console.log("The Nein's have it! " + currentChancellorCandidate + " was not elected :(");
+                    io.emit("vote complete", false, currentChancellorCandidate, voteRecord);
                 }
                 votes = 0;
                 yes = 0;
@@ -427,7 +431,7 @@ io.on('connection', function(socket){
             }
         });
 
-    } else { 
+    } else {
 
         console.log("players.length = " + players.length);
 
