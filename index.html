@@ -71,6 +71,15 @@
             </div>
         </div>
 
+        <!-- After vote, create closed list of vote results, for later consultation -->
+        <!-- Might make this toggle-able as this might be overpowered -->
+        <div id="card_select" class="fullscreen_popup">
+            <div class="chancellor_select">
+                <h2>Choose ONE card to discard</h2>
+                <div id="policy_cards" class="policy_cards"></div>
+            </div>
+        </div>
+
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 
@@ -387,9 +396,9 @@
             });
 
             // Chancellor Vote
-            // Evnet has been sent from server, select 'Ja'or 'Nein'
+            // Event has been sent from server, select 'Ja'or 'Nein'
             socket.on('chancellor vote', function(pres, chanc) {
-                // Contextualize text in cas you are the president
+                // Contextualize text in case you are the president
                 var is_it_you = pres === $("#username").text() ? "You have" : pres + " has";
 
                 // Display the vote dialog and set text nodes with proper values
@@ -408,11 +417,20 @@
                 $("#chancellor_vote").hide();
             });
 
+            // Card select
+            // Chancellor has been locked in, now the president get's to choose 1 card to discard
+            socket.on('card select', function(cards, initial) {
 
-            // Call a vote
-            $('#call_vote').click(function(){
-                socket.emit('call vote', "test");
-                return false;
+                // Display the card dialog and setup the proper card divs
+                $("#card_select").show();
+                var policyCards = document.createElement('ul');
+
+                for(var i = 0;i < cards.length;i++) {
+                    var card = cards[i].type == "liberal" ? "Liberal" : "Fascist" ;                   
+                    $(policyCards).append($('<li>').html('<img src="img/' + card + '-Article-Card.jpg" />'));
+                }
+                // Replace with full screen ui, just hide and show as neccessary
+                $('#policy_cards').append(policyCards);
             });
 
 

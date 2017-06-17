@@ -6,6 +6,7 @@
   "user_id"    : socket,     // Large alpha numeric id assigned by socket.io when he user connects
   "nick"       : "Bill",     // String, no restrictions yet
   "ready"      : true,       // Boolean, Whether the player is ready or not 
+  "chancellor" : true,       // Boolean, if the player is chancellor
   "president"  : true,       // Boolean, if the player is president
   "team"       : "liberal",  // String, either liberal or fascist
   "hitler"     : true        // Boolean, whether the user is hitler
@@ -42,6 +43,34 @@ Players.prototype.getPlayerWithNick = function(nick) {
 
     this.playerList.forEach(function(element, index, array) {
         if (element.nick == nick) {
+            console.log("Why isn't this returning?")
+            player = element;
+        }
+    })
+
+    return player || false;
+};
+
+// Get current President
+Players.prototype.getPresident = function() {
+    var player;
+
+    this.playerList.forEach(function(element, index, array) {
+        if (element.president == true) {
+            console.log("Why isn't this returning?")
+            player = element;
+        }
+    })
+
+    return player || false;
+};
+
+// Get current Chancellor
+Players.prototype.getChancellor = function() {
+    var player;
+
+    this.playerList.forEach(function(element, index, array) {
+        if (element.chancellor == true) {
             console.log("Why isn't this returning?")
             player = element;
         }
