@@ -413,6 +413,12 @@ io.on('connection', function(socket){
             console.log("Are we grabbing/sending an emit to the president? " + Players.getPresident().user_id);
         }   
 
+        // User has voted
+        socket.on('presidents choice', function(top2) {
+            console.log("Top 2 cards bitches!");
+            console.log(top2);
+        });
+
 
         // When message submitted, emits to entire userbase
         socket.on('chat message', function(msg) {

@@ -367,8 +367,7 @@ h1,h2,h3,h4,h5 {
     right: 0;
     background-color: red; 
 }
-.chancellor_select,
-.chancellor_vote {
+.fullscreen_popup__block {
     text-align: center;
     max-width: 600px;
     width: 100%;
@@ -380,18 +379,41 @@ h1,h2,h3,h4,h5 {
     transform: translate(-50%, -50%)
 }
 
-.chancellor_select ul {
+.fullscreen_popup__block ul {
     margin: 0;
     padding: 0;
     list-style-type: none;
 }
-.chancellor_select ul li {
+
+.fullscreen_popup__block ul li {
     text-align: center;
     padding: 10px;
     background-color: #fff;
     color: #333;
     transition: all 0.5s;
     margin: 10px 0;
+}
+
+.card_select .fullscreen_popup__block ul li {
+    text-align: center;
+    padding: 0px;
+    background-color: #fff;
+    color: #333;
+    transition: all 0.5s;
+    width: calc(32.33333333333% - 5px);
+    float: left;
+    margin: 0 1%;
+    border: 5px #fff solid;
+    transition: all 0.5s;
+    cursor: pointer;
+}
+
+.card_select .chancellor_select ul li:hover {
+    border: 5px solid #333;
+}
+
+.card_team {
+    width: 100%;
 }
 
 .chancellor_select ul li:hover {

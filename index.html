@@ -55,7 +55,7 @@
 
         <!-- Should probably be generating these with javascript -->
         <div id="chancellor_select" class="fullscreen_popup">
-            <div class="chancellor_select">
+            <div class="fullscreen_popup__block">
                 <h2>Select your chancellor:</h2>
                 <div id="chancellor_select__list" class="chancellor_select__list"></div>
             </div>
@@ -64,7 +64,7 @@
         <!-- After vote, create closed list of vote results, for later consultation -->
         <!-- Might make this toggle-able as this might be overpowered -->
         <div id="chancellor_vote" class="fullscreen_popup">
-            <div class="chancellor_select">
+            <div class="fullscreen_popup__block">
                 <h2><span id="current_president">Blank</span> chosen <span id="chancellor_candidate">blank</span> as the candidate for chancellor.</h2>
                 <div id="ja" class="button">Ja!</div>
                 <div id="nein" class="button">Nein!</div>
@@ -73,8 +73,8 @@
 
         <!-- After vote, create closed list of vote results, for later consultation -->
         <!-- Might make this toggle-able as this might be overpowered -->
-        <div id="card_select" class="fullscreen_popup">
-            <div class="chancellor_select">
+        <div id="card_select" class="fullscreen_popup card_select">
+            <div class="fullscreen_popup__block">
                 <h2>Choose ONE card to discard</h2>
                 <div id="policy_cards" class="policy_cards"></div>
             </div>
@@ -87,6 +87,7 @@
         $(function() {
             var socket = io();
             var currentUser;
+            var top2;
 
             //////////////////////////////////////////////////////////////
             // Utility Functions
@@ -421,17 +422,39 @@
             // Chancellor has been locked in, now the president get's to choose 1 card to discard
             socket.on('card select', function(cards, initial) {
 
+                // Set top3 var so it can be used in other places
+                top2 = cards;
+
                 // Display the card dialog and setup the proper card divs
                 $("#card_select").show();
                 var policyCards = document.createElement('ul');
 
                 for(var i = 0;i < cards.length;i++) {
                     var card = cards[i].type == "liberal" ? "Liberal" : "Fascist" ;                   
-                    $(policyCards).append($('<li>').html('<img src="img/' + card + '-Article-Card.jpg" />'));
+                    var num = cards[i].id;
+                    $(policyCards).append($('<li>').html('<img id="card_' + num + '" class="card_team card_team--'+ card +'" src="img/' + card + '-Article-Card.jpg" />'));
                 }
+
                 // Replace with full screen ui, just hide and show as neccessary
                 $('#policy_cards').append(policyCards);
+
+                // Card Chosen, needs to be here bcuz the new elements need to have event's appended
+                $(".card_team").on("click", function() {
+                    for(var i = 0;i < top2.length;i++) {
+                        console.log("Loop #" + i + " clicked element id =" + this.id +", current array element =" + top2[i].id);
+                        if(this.id == "card_" + top2[i].id) {
+                            top2.splice(i, 1);
+                        } else {
+                            console.log("Something went wrong, this shouldn't happen. I'm in the policy card function.")
+                        }
+                    }
+                    socket.emit('presidents choice', top2);
+                    $("#card_select").hide();
+                })
+
             });
+
+            
 
 
             //Vote complete, display vote completion ui
@@ -450,7 +473,6 @@
                 $('#messages').append($('<li>').html('<div class="votes"><h4>The ' + results + 's have it! ' + script + '</h4></div>'));
                 $('#messages').append($('<li>').html(voteResult));
                 
-               
             });
         });
         </script>

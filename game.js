@@ -76,7 +76,9 @@ Game.prototype.teamOrganizer = function(playerList, liberals, fascists, secretHi
     return Players.getPlayers();
 };
 
+// Manages the policy cards, shuffling 
 Game.prototype.getCards = function(stack) {
+
     var cards = [
         { "id": 1, "type": "liberal" },
         { "id": 2, "type": "liberal" },
@@ -96,8 +98,8 @@ Game.prototype.getCards = function(stack) {
         { "id": 16, "type": "fascist" },
         { "id": 17, "type": "fascist" }
     ];
-    var cardStack;
 
+    var cardStack;
 
     if (!stack || stack.length < 3) {
         cardStack = shuffle(cards);
