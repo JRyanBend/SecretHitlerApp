@@ -52,41 +52,53 @@ Players.prototype.getPlayerWithNick = function(nick) {
 };
 
 // Get current President
-Players.prototype.getPresident = function() {
+Players.prototype.getPresident = function(remove) {
     var player;
+    var local = this;
 
     this.playerList.forEach(function(element, index, array) {
         if (element.president == true) {
-            console.log("Why isn't this returning?")
+            console.log("President exists, it is: " + element.nick);
             player = element;
+            if(remove) {
+                local.modifyPlayer(index, "president", false);
+            }
         }
     })
 
-    return player || false;
+    if(!remove) {
+        return player || false;
+    }
 };
 
 // Get current Chancellor
-Players.prototype.getChancellor = function() {
+Players.prototype.getChancellor = function(remove) {
     var player;
+    var local = this;
 
     this.playerList.forEach(function(element, index, array) {
         if (element.chancellor == true) {
-            console.log("Why isn't this returning?")
+            console.log("Chancellor exists, it is: " + element.nick);
             player = element;
+            if(remove) {
+                local.modifyPlayer(index, "chancellor", false);
+            }
         }
     })
 
-    return player || false;
+    if(!remove) {
+        return player || false;
+    }
 };
 
 // Remove Player
 Players.prototype.removePlayer = function(remove) {
-	this.playerList.splice(remove,1);
+	  this.playerList.splice(remove,1);
 };
 
 // Modify Player
 Players.prototype.modifyPlayer = function(player, modifier, value) {
-	this.playerList[player][modifier] = value;
+	  this.playerList[player][modifier] = value;
 };
 
 module.exports = new Players();

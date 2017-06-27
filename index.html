@@ -87,7 +87,7 @@
         $(function() {
             var socket = io();
             var currentUser;
-            var top2;
+            var selected_cards;
 
             //////////////////////////////////////////////////////////////
             // Utility Functions
@@ -409,21 +409,23 @@
             });
 
             $("#ja").on("click", function() {
-                socket.emit('chancellor vote', true, currentUser);
+                socket.emit('chancellor submit', true, currentUser);
                 $("#chancellor_vote").hide();
             });
 
             $("#nein").on("click", function() {
-                socket.emit('chancellor vote', false, currentUser);
+                socket.emit('chancellor submit', false, currentUser);
                 $("#chancellor_vote").hide();
             });
 
             // Card select
             // Chancellor has been locked in, now the president get's to choose 1 card to discard
             socket.on('card select', function(cards, initial) {
+                var is_president = cards.length === 3 ? true : false;
+                var selected_cards = cards;
 
-                // Set top3 var so it can be used in other places
-                top2 = cards;
+                console.log("Ok couple things here, is_president: "+ is_president);
+                console.log(cards + " " + cards.length);
 
                 // Display the card dialog and setup the proper card divs
                 $("#card_select").show();
@@ -436,22 +438,25 @@
                 }
 
                 // Replace with full screen ui, just hide and show as neccessary
-                $('#policy_cards').append(policyCards);
+                $('#policy_cards').html('').append(policyCards);
 
                 // Card Chosen, needs to be here bcuz the new elements need to have event's appended
                 $(".card_team").on("click", function() {
-                    for(var i = 0;i < top2.length;i++) {
-                        console.log("Loop #" + i + " clicked element id =" + this.id +", current array element =" + top2[i].id);
-                        if(this.id == "card_" + top2[i].id) {
-                            top2.splice(i, 1);
-                        } else {
-                            console.log("Something went wrong, this shouldn't happen. I'm in the policy card function.")
-                        }
+                    for(var i = 0;i < selected_cards.length;i++) {
+                        console.log("Loop #" + i + " clicked element id =" + this.id +", current array element =" + selected_cards[i].id);
+                        if(this.id == "card_" + selected_cards[i].id) {
+                            selected_cards.splice(i, 1);
+                        } 
                     }
-                    socket.emit('presidents choice', top2);
+
+                    if(is_president) {
+                        socket.emit('presidents choice', selected_cards);
+                    } else {
+                        socket.emit('chancellors choice', selected_cards);
+                    }
+
                     $("#card_select").hide();
                 })
-
             });
 
             

@@ -21,6 +21,8 @@ var currentPresident;
 var currentChancellorCandidate;
 var currentChancellor;
 var voteRecord = [];
+var random_starting_player;
+var player_order;
 
 // BASE EXPRESS FUNCTIONS
 // Create path to static files
@@ -326,11 +328,11 @@ io.on('connection', function(socket){
 
             // Fire off the first chancellor vote
             // Select a random player and emit that socket call to them
-            var random_starting_player = getRandomIntInclusive(0, players.length);
-            console.log("Starting player " + random_starting_player);
-            io.to(players[random_starting_player].user_id).emit("chancellor select", Players.getPlayers());
-            players[random_starting_player]["president"] = true;
-            currentPresident = players[random_starting_player];
+            player_order = getRandomIntInclusive(0, players.length);
+            console.log("Starting player " + player_order);
+            io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
+            Players.modifyPlayer(player_order, "president", true);
+            currentPresident = players[player_order];
         });
 
 
@@ -360,7 +362,7 @@ io.on('connection', function(socket){
         });
 
         // User has voted
-        socket.on('chancellor vote', function(vote, name) {
+        socket.on('chancellor submit', function(vote, name) {
             if(vote) {
                 console.log("Voted Yes!");
                 yes++;
@@ -380,12 +382,37 @@ io.on('connection', function(socket){
                 if(yes > no) {
                     console.log("The Ja's have it! " + currentChancellorCandidate + " was elected!");
                     io.emit("vote complete", true, currentChancellorCandidate, voteRecord);
+                    currentChancellor = currentChancellorCandidate;
+
+                    for(var i = 0;i < players.length;i++) {
+                        // If this person is ready
+                        console.log(i);
+                        if(players[i].nick == currentChancellor) {
+                            // If they're not ready disconnect them
+                            Players.modifyPlayer(i, "chancellor", true);
+                        }
+                    }
                     
-                    // This errored, try to fix in the future, will probably be useful
-                    // Players.modifyPlayer(Players.getPlayerWithNick(currentChancellorCandidate), "chancellor", true);
                 } else {
                     console.log("The Nein's have it! " + currentChancellorCandidate + " was not elected :(");
                     io.emit("vote complete", false, currentChancellorCandidate, voteRecord);
+
+                    // Push game forward by moving the president to the next player and cleaning up previous flags
+                    // This is DUPLICATE code, need to refactor
+                    player_order++;
+                    Players.getPresident(true);
+                    Players.getChancellor(true);
+
+                    if(player_order > players.length - 1) {
+                        io.to(players[0].user_id).emit("chancellor select", Players.getPlayers());
+                        player_order = 0;
+                    } else {
+                        io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
+                    }
+
+                    // Update the president in the player list
+                    Players.modifyPlayer(player_order, "president", true);
+                    currentPresident = players[player_order];
                 }
                 votes = 0;
                 yes = 0;
@@ -413,10 +440,43 @@ io.on('connection', function(socket){
             console.log("Are we grabbing/sending an emit to the president? " + Players.getPresident().user_id);
         }   
 
-        // User has voted
+        // President has removed the first card, remaining two are the parameter of this function
+        // Push these two cards to the client with the 'chancellor' flag
         socket.on('presidents choice', function(top2) {
             console.log("Top 2 cards bitches!");
             console.log(top2);
+
+            console.log("Check if chancellor is set: " + Players.getChancellor());
+
+            io.to(Players.getChancellor().user_id).emit("card select", top2, true);
+        });
+
+        // Chancellor has discarded the final card, the remaining one will be placed on the board
+        socket.on('chancellors choice', function(card) {
+            console.log("Top 1 card bitches!");
+            console.log(card);
+
+            // Add the policy card to the game board
+            Game.addPolicy(card.type);
+
+            // Push game forward by moving the president to the next player and cleaning up previous flags
+            player_order++;
+            Players.getPresident(true);
+            Players.getChancellor(true);
+
+            console.log("player_order: " + player_order);
+            console.log("players.length: " + players.length);
+
+            if(player_order > players.length - 1) {
+                io.to(players[0].user_id).emit("chancellor select", Players.getPlayers());
+                player_order = 0;
+            } else {
+                io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
+            }
+
+            // Update the president in the player list
+            Players.modifyPlayer(player_order, "president", true);
+            currentPresident = players[player_order];
         });
 
 

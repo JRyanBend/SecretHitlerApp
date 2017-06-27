@@ -3,7 +3,7 @@
 var Players = require('./Players');
 
 function Game() {
-  //this.store = {};
+  this.board = [{"liberal": 0}, {"Fascist": 0}];
 }
 
 function allegianceRandomizer() {
@@ -109,5 +109,20 @@ Game.prototype.getCards = function(stack) {
 
     return cardStack;
 };
+
+// Return the current state of the board
+Game.prototype.getBoard = function(card) {
+    return this.board;
+};
+
+// Add a policy card to the board 
+Game.prototype.addPolicy = function(card) {
+    if(card === "Liberal") {
+        this.board.liberal++;
+    } else {
+        this.board.fascist++;
+    }
+};
+
 
 module.exports = new Game();
