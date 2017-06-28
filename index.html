@@ -80,6 +80,22 @@
             </div>
         </div>
 
+        <!-- After vote, create closed list of vote results, for later consultation -->
+        <!-- Might make this toggle-able as this might be overpowered -->
+        <div id="game_over" class="fullscreen_popup game over">
+            <div class="fullscreen_popup__block">
+                <h2>GAME OVER!</h2>
+                <div id="game_over_message" class="game_over_message"></div>
+            </div>
+        </div>
+
+        <footer class="board" id="board">
+            <div class="liberal_policies" id="liberal_policies">
+            </div>
+            <div class="fascist_policies" id="fascist_policies">
+            </div>
+        </footer>
+
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 
@@ -437,7 +453,7 @@
                     $(policyCards).append($('<li>').html('<img id="card_' + num + '" class="card_team card_team--'+ card +'" src="img/' + card + '-Article-Card.jpg" />'));
                 }
 
-                // Replace with full screen ui, just hide and show as neccessary
+                // Append the policy cards to the fullscreen display
                 $('#policy_cards').html('').append(policyCards);
 
                 // Card Chosen, needs to be here bcuz the new elements need to have event's appended
@@ -459,10 +475,7 @@
                 })
             });
 
-            
-
-
-            //Vote complete, display vote completion ui
+            // Vote complete, display vote completion ui
             socket.on('vote complete', function(result, chancellor, record) {
                 var results = result ? "Ja" : "Nein";
                 var script = result ? chancellor + ' is the new chancellor! All hail!' : chancellor + ' has failed in his bid to become chancellor!'
@@ -478,6 +491,33 @@
                 $('#messages').append($('<li>').html('<div class="votes"><h4>The ' + results + 's have it! ' + script + '</h4></div>'));
                 $('#messages').append($('<li>').html(voteResult));
                 
+            });
+
+            // Card selected, update the game board
+            socket.on('board update', function(board) {
+                var liberal = board["liberal"];
+                var fascist = board["fascist"];
+
+                var liberalCards = document.createElement('ul');
+                var fascistCards = document.createElement('ul');
+
+                for(var i = 0;i < liberal;i++) {             
+                    $(liberalCards).append($('<li>').html('<img id="policy_' + i + '" class="board_cards board_cards--Liberal" src="img/Liberal-Article-Card.jpg" />'));
+                }
+
+                for(var i = 0;i < fascist;i++) {             
+                    $(fascistCards).append($('<li>').html('<img id="policy_' + i + '" class="board_cards board_cards--Fascist" src="img/Fascist-Article-Card.jpg" />'));
+                }
+
+                // Append the policy cards to the fullscreen display
+                $('#liberal_policies').html('').append(liberalCards);
+                $('#fascist_policies').html('').append(fascistCards);
+            });
+
+            // Card selected, update the game board
+            socket.on('game over', function(winners) {
+                $("#game_over").show();
+                $("#game_over_message").html(winners + "are the winners!")
             });
         });
         </script>

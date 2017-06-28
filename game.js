@@ -3,7 +3,7 @@
 var Players = require('./Players');
 
 function Game() {
-  this.board = [{"liberal": 0}, {"Fascist": 0}];
+  this.board = {"liberal": 0, "fascist": 0};
 }
 
 function allegianceRandomizer() {
@@ -51,21 +51,21 @@ Game.prototype.teamOrganizer = function(playerList, liberals, fascists, secretHi
                 if(allegiance_randomizer === true) {
                     Players.modifyPlayer(i, "team", "liberal");
                     liberals--;
-                     console.log("liberal!");
+                     console.log(players[i] + " is a liberal!");
                 } else {
                     Players.modifyPlayer(i, "team", "fascist");
                     fascists--;
-                    console.log("fascist!");
+                    console.log(players[i] + " is a fascist!");
                 }
             } else {
                 if(liberals > 0) {
                     Players.modifyPlayer(i, "team", "liberal");
                     liberals--;
-                    console.log("liberal2!");
+                    console.log("We have enough fascists so " + players[i] + " is a liberal!");
                 } else if(fascists > 0) {
                     Players.modifyPlayer(i, "team", "fascist");
                     fascists--;
-                    console.log("fascist2!");
+                    console.log("We have enough fascists so " + players[i] + " is a fascist!");
                 } else {
                     console.error("Error: Your facist/liberal count is off or something")
                 }
@@ -117,11 +117,15 @@ Game.prototype.getBoard = function(card) {
 
 // Add a policy card to the board 
 Game.prototype.addPolicy = function(card) {
-    if(card === "Liberal") {
+    console.log("CARD:")
+    console.log(card);
+    if(card === "liberal") {
         this.board.liberal++;
     } else {
         this.board.fascist++;
     }
+
+    console.log(this.board);
 };
 
 

@@ -43,7 +43,6 @@ Players.prototype.getPlayerWithNick = function(nick) {
 
     this.playerList.forEach(function(element, index, array) {
         if (element.nick == nick) {
-            console.log("Why isn't this returning?")
             player = element;
         }
     })

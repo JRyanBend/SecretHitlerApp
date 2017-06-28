@@ -23,6 +23,7 @@ var currentChancellor;
 var voteRecord = [];
 var random_starting_player;
 var player_order;
+var game_over;
 
 // BASE EXPRESS FUNCTIONS
 // Create path to static files
@@ -238,7 +239,6 @@ io.on('connection', function(socket){
             // Trim the non ready users
             for(var i = 0;i < players.length;i++) {
                 // If this person is ready
-                console.log(i);
                 if(players[i].ready != true) {
                     // If they're not ready disconnect them
                     io.to(players[i].user_id).emit("disconnecter", "started");
@@ -255,7 +255,6 @@ io.on('connection', function(socket){
             var fascist;
             var liberal;
             console.log("secret hitler #: " + secretHitler);
-            console.log("Ready: " +ready);
 
             // Next cycle through the ready players and assign them random classes based on how many players there are
             switch (ready) {
@@ -321,7 +320,6 @@ io.on('connection', function(socket){
                 }   
 
             }
-            console.log(players);
 
             gameStarted = true;
             console.log(name + " has started the game. There are " + ready + " players in this game.");
@@ -340,22 +338,13 @@ io.on('connection', function(socket){
         // Game Logic
         /////////////////////////////////////////////////////////////////////////
 
-        /* Old test voting
-        // Call for a vote
-        socket.on('call vote', function(test) {
-            console.log("Vote called");
-            io.emit("vote called", "data");
-
-            console.log("votes = " + votes);
-        });*/
-
-
         // Call for a vote
         // Accepts the president and chancellors names then emits an event to all players
         socket.on('chancellor chosen', function(pres, chanc) {
             console.log("Vote called");
 
             currentChancellorCandidate = Players.getPlayerWithNick(chanc).nick;
+
             // Send to all a dialog to ja or nein the presidents choice for chancellor
             io.emit("chancellor vote", pres, chanc);
             
@@ -392,6 +381,9 @@ io.on('connection', function(socket){
                             Players.modifyPlayer(i, "chancellor", true);
                         }
                     }
+
+                    // Chancellor successfully elected, move on to card select
+                    gameLoop();
                     
                 } else {
                     console.log("The Nein's have it! " + currentChancellorCandidate + " was not elected :(");
@@ -413,13 +405,17 @@ io.on('connection', function(socket){
                     // Update the president in the player list
                     Players.modifyPlayer(player_order, "president", true);
                     currentPresident = players[player_order];
+
+                    // Send a dialog to the next president to choose a chancellor
+                    io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
                 }
+
                 votes = 0;
                 yes = 0;
                 no = 0;
                 console.log("Vote has concluded, values should be reset.");
 
-                gameLoop();
+                
             }
         }); 
 
@@ -457,26 +453,43 @@ io.on('connection', function(socket){
             console.log(card);
 
             // Add the policy card to the game board
-            Game.addPolicy(card.type);
+            Game.addPolicy(card[0].type);
 
-            // Push game forward by moving the president to the next player and cleaning up previous flags
-            player_order++;
-            Players.getPresident(true);
-            Players.getChancellor(true);
+            // Update the clients game board
+            var board = Game.getBoard();
+            io.emit("board update", board);
 
-            console.log("player_order: " + player_order);
-            console.log("players.length: " + players.length);
-
-            if(player_order > players.length - 1) {
-                io.to(players[0].user_id).emit("chancellor select", Players.getPlayers());
-                player_order = 0;
-            } else {
-                io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
+            // Check if game is over
+            if(board["liberal"] >= 5){ 
+                // Game is over, liberals win!!
+                io.emit("game over", "liberals");
+                game_over = 1;
+            } else if (board["facist"] >= 6) {
+                // Game is over, fascists win!!
+                io.emit("game over", "fascists");
+                game_over = 1;
             }
 
-            // Update the president in the player list
-            Players.modifyPlayer(player_order, "president", true);
-            currentPresident = players[player_order];
+            if(!game_over) {
+                // Push game forward by moving the president to the next player and cleaning up previous flags
+                player_order++;
+                Players.getPresident(true);
+                Players.getChancellor(true);
+
+                console.log("player_order: " + player_order);
+                console.log("players.length: " + players.length);
+
+                if(player_order > players.length - 1) {
+                    io.to(players[0].user_id).emit("chancellor select", Players.getPlayers());
+                    player_order = 0;
+                } else {
+                    io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
+                }
+
+                // Update the president in the player list
+                Players.modifyPlayer(player_order, "president", true);
+                currentPresident = players[player_order];
+            }
         });
 
 
