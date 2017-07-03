@@ -112,7 +112,7 @@ io.on('connection', function(socket){
 
         // If game has started announce users connecting/disconnecting
         if(gameStarted) {
-            io.emit('chat message', 'A user has connected');
+            //io.emit('chat message', 'A user has connected');
         }
         console.log("Current Usercount: " + current_user_count);
 
@@ -152,7 +152,7 @@ io.on('connection', function(socket){
         // Track user disconnections
         socket.on('disconnect', function() {
             current_user_count--;
-            io.emit('chat message', 'A user has disconnected');
+            //io.emit('chat message', 'A user has disconnected');
             console.log("Current usercount: " + current_user_count);
 
             // Remove user from players array
@@ -413,9 +413,8 @@ io.on('connection', function(socket){
                 votes = 0;
                 yes = 0;
                 no = 0;
+                voteRecord = [];
                 console.log("Vote has concluded, values should be reset.");
-
-                
             }
         }); 
 
@@ -480,10 +479,10 @@ io.on('connection', function(socket){
                 console.log("players.length: " + players.length);
 
                 if(player_order > players.length - 1) {
-                    io.to(players[0].user_id).emit("chancellor select", Players.getPlayers());
+                    io.to(players[0].user_id).emit("chancellor select", Players.getPlayers(), currentChancellor);
                     player_order = 0;
                 } else {
-                    io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
+                    io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers(), currentChancellor);
                 }
 
                 // Update the president in the player list

@@ -104,6 +104,7 @@
             var socket = io();
             var currentUser;
             var selected_cards;
+            var resultCount;
 
             //////////////////////////////////////////////////////////////
             // Utility Functions
@@ -396,8 +397,11 @@
             // Choose a chancellor from a list
             // Generate a list of players, minus this player, and let them choose
             // probably have a confirmation dialog to make sure
-            socket.on('chancellor select', function(players) {
+            socket.on('chancellor select', function(players, lastChancellor) {
                 console.log("MAKE IT!")
+
+                // Last chancellor was to fix the 'not choosing the last chancellor' problem, it's more of a gmae logic problem, there should be a better place to fix this
+                console.log(lastChancellor);
                 updatePlayerList(players, "select");
                 $("#chancellor_select").show();
 
@@ -477,19 +481,24 @@
 
             // Vote complete, display vote completion ui
             socket.on('vote complete', function(result, chancellor, record) {
+                resultCount++;
                 var results = result ? "Ja" : "Nein";
-                var script = result ? chancellor + ' is the new chancellor! All hail!' : chancellor + ' has failed in his bid to become chancellor!'
+                var script = result ? chancellor + ' is the new chancellor!' : chancellor + ' has failed in his bid to become chancellor!'
                 var voteResult = document.createElement('ul');
 
                 for(var i = 0;i < record.length;i++) {
                     console.log(record[i]);
                     console.log(voteResult);
                     var vote_translate = record[i][1] ? "JA!" : "NEIN!"
-                    $(voteResult).append($('<li>').html('<p><span class="">' + record[i][0] + '</span> ' + vote_translate));
+                    $(voteResult).append($('<li>').html('<p><span class="voter_name">' + record[i][0] + '</span> voted: ' + vote_translate));
                 }
                 // Replace with full screen ui, just hide and show as neccessary
-                $('#messages').append($('<li>').html('<div class="votes"><h4>The ' + results + 's have it! ' + script + '</h4></div>'));
-                $('#messages').append($('<li>').html(voteResult));
+                $('#messages').append($('<li>').html('<div class="votes"><h4>Vote ' + resultCount + ': ' + script + '</h4><div class="vote_results" id="result_' + resultCount + '"></div></div>'));
+                $('#result_' + resultCount ).append($('<li>').html(voteResult));
+
+                $(".votes").on("click", function() {
+                    $(this).find(".vote_results").slideToggle();
+                })
                 
             });
 
@@ -517,7 +526,7 @@
             // Card selected, update the game board
             socket.on('game over', function(winners) {
                 $("#game_over").show();
-                $("#game_over_message").html(winners + "are the winners!")
+                $("#game_over_message").html(winners + " are the winners!")
             });
         });
         </script>
