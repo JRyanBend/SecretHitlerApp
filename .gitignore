@@ -39,3 +39,8 @@ Thumbs.db
 # Node Modules #
 ################
 /node_modules
+
+# Random Othe File Types #
+##########################
+*.pdf
+*.vscode

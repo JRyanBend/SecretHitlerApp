@@ -37,35 +37,35 @@ Game.prototype.teamOrganizer = function(playerList, liberals, fascists, secretHi
 	var secretHitler = secretHitler;
     Players.setPlayers(playerList);
 
-    console.log("Player List:");
+    console.log("Player List at the Start of Team Organization:");
 	console.log(playerList);
 
 	for(var i = 0;i < players;i++) {
         if(i === secretHitler){ 
             Players.modifyPlayer(i, "team", "fascist");
             Players.modifyPlayer(i, "hitler", true);
-            console.log("Hitler!");
+            console.log(playerList[i].nick + " Hitler!");
         } else {
             if(liberals > 0 && fascists > 0) {
                 var allegiance_randomizer = Math.random() >= 0.5;
                 if(allegiance_randomizer === true) {
                     Players.modifyPlayer(i, "team", "liberal");
                     liberals--;
-                     console.log(players[i] + " is a liberal!");
+                     console.log(playerList[i].nick + " is a liberal!");
                 } else {
                     Players.modifyPlayer(i, "team", "fascist");
                     fascists--;
-                    console.log(players[i] + " is a fascist!");
+                    console.log(playerList[i].nick + " is a fascist!");
                 }
             } else {
                 if(liberals > 0) {
                     Players.modifyPlayer(i, "team", "liberal");
                     liberals--;
-                    console.log("We have enough fascists so " + players[i] + " is a liberal!");
+                    console.log("We have enough fascists so " + playerList[i].nick + " is a liberal!");
                 } else if(fascists > 0) {
                     Players.modifyPlayer(i, "team", "fascist");
                     fascists--;
-                    console.log("We have enough fascists so " + players[i] + " is a fascist!");
+                    console.log("We have enough fascists so " + playerList[i].nick + " is a fascist!");
                 } else {
                     console.error("Error: Your facist/liberal count is off or something")
                 }

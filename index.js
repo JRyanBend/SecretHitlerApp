@@ -24,12 +24,14 @@ var voteRecord = [];
 var random_starting_player;
 var player_order;
 var game_over;
+var unsuccessful_chancellor_election = 0;
 
 // BASE EXPRESS FUNCTIONS
 // Create path to static files
 app.use(express.static('public'))
 
 // Routing? I'm not even sure what this does
+// This IS routing! As it's written here it takes all traffic and points it to index.html
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
@@ -198,7 +200,7 @@ io.on('connection', function(socket){
                     if(players[i].ready === true) {
                         Players.modifyPlayer(i, "ready", false);
                         ready--;  
-                        console.log("ready count: " + ready);
+                        console.log("Current Count of 'Ready' Players " + ready);
                         if(ready < 5) {
                             io.emit('remove start');
                         }
@@ -266,8 +268,8 @@ io.on('connection', function(socket){
                     players = game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 case 6:
-                    liberals = 3;
-                    fascists = 2;
+                    liberals = 4;
+                    fascists = 1;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
@@ -280,8 +282,8 @@ io.on('connection', function(socket){
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                     break;
                 case 8:
-                    liberals = 4;
-                    fascists = 3;
+                    liberals = 5;
+                    fascists = 2;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
@@ -293,8 +295,8 @@ io.on('connection', function(socket){
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
                 case 10:
-                    liberals = 5;
-                    fascists = 4;
+                    liberals = 6;
+                    fascists = 3;
                     console.log("Game organizer: " + ready);
 
                     game.teamOrganizer(players, liberals, fascists, secretHitler);
@@ -386,8 +388,23 @@ io.on('connection', function(socket){
                     gameLoop();
                     
                 } else {
-                    console.log("The Nein's have it! " + currentChancellorCandidate + " was not elected :(");
-                    io.emit("vote complete", false, currentChancellorCandidate, voteRecord);
+                    // Track unsuccessful elections
+                    unsuccessful_chancellor_election++;
+                    
+                    // On a 3rd unsuccessful election, assign a random policy card to the board
+                    if(unsuccessful_chancellor_election === 3) {
+                        var randomPolicy = true;
+                        console.log("The Nein's have it! " + currentChancellorCandidate + " was not elected, and because this was the 3rd fail, we now apply a random policy card");
+                        io.emit("vote complete", false, currentChancellorCandidate, voteRecord, randomPolicy);
+                        
+                        gameResolutionCheck(false);
+
+                        //Zero out the count so we can start counting again
+                        unsuccessful_chancellor_election = 0;
+                    } else {
+                        console.log("The Nein's have it! " + currentChancellorCandidate + " was not elected :(");
+                        io.emit("vote complete", false, currentChancellorCandidate, voteRecord);
+                    }
 
                     // Push game forward by moving the president to the next player and cleaning up previous flags
                     // This is DUPLICATE code, need to refactor
@@ -418,6 +435,7 @@ io.on('connection', function(socket){
             }
         }); 
 
+        // Once the Chancellor has been selected, this will begin the policy card selection process
         function gameLoop() {
 
             console.log("We're in gameloop!")
@@ -433,26 +451,15 @@ io.on('connection', function(socket){
             io.to(Players.getPresident().user_id).emit("card select", top3, true);
 
             console.log("Are we grabbing/sending an emit to the president? " + Players.getPresident().user_id);
-        }   
-
-        // President has removed the first card, remaining two are the parameter of this function
-        // Push these two cards to the client with the 'chancellor' flag
-        socket.on('presidents choice', function(top2) {
-            console.log("Top 2 cards bitches!");
-            console.log(top2);
-
-            console.log("Check if chancellor is set: " + Players.getChancellor());
-
-            io.to(Players.getChancellor().user_id).emit("card select", top2, true);
-        });
-
-        // Chancellor has discarded the final card, the remaining one will be placed on the board
-        socket.on('chancellors choice', function(card) {
-            console.log("Top 1 card bitches!");
-            console.log(card);
-
-            // Add the policy card to the game board
-            Game.addPolicy(card[0].type);
+        }  
+        
+        function gameResolutionCheck(cardAvailable) {
+            // Add the policy card to the game board depending on if a card is sent in
+            if(cardAvailable) {
+                Game.addPolicy(card[0].type);
+            } else {
+                Game.addPolicy(Math.random() >= 0.5 ? "liberal" : "fascist");
+            }
 
             // Update the clients game board
             var board = Game.getBoard();
@@ -489,6 +496,27 @@ io.on('connection', function(socket){
                 Players.modifyPlayer(player_order, "president", true);
                 currentPresident = players[player_order];
             }
+        }
+
+
+        // President has removed the first card, remaining two are the parameter of this function
+        // Push these two cards to the client with the 'chancellor' flag
+        socket.on('presidents choice', function(top2) {
+            console.log("Top 2 cards bitches!");
+            console.log(top2);
+
+            console.log("Check if chancellor is set: " + Players.getChancellor());
+
+            io.to(Players.getChancellor().user_id).emit("card select", top2, true);
+        });
+
+        // Chancellor has discarded the final card, the remaining one will be placed on the board
+        socket.on('chancellors choice', function(card) {
+            console.log("Top 1 card bitches!");
+            console.log(card);
+
+            // GANE OVER CHECK LOGIC GOES HERE
+            gameResolutionCheck(card);
         });
 
 

@@ -410,7 +410,7 @@
                     console.log(e.target.firstChild.nodeValue);
 
                     // Send the selected chancellor's name back to the server
-                    // TODO: Might want to add a confimartion dialog
+                    // TODO: Might want to add a confirmation dialog
                     socket.emit('chancellor chosen', $("#username").text(), e.target.firstChild.nodeValue);
                     $("#chancellor_select").hide();
                 });
@@ -420,12 +420,13 @@
             // Event has been sent from server, select 'Ja'or 'Nein'
             socket.on('chancellor vote', function(pres, chanc) {
                 // Contextualize text in case you are the president
-                var is_it_you = pres === $("#username").text() ? "You have" : pres + " has";
+                var are_you_president = pres === $("#username").text() ? "You have" : pres + " has";
+                var are_you_chancellor = chanc === $("#username").text() ? "YOU" : chanc;
 
                 // Display the vote dialog and set text nodes with proper values
                 $("#chancellor_vote").show();
-                $("#current_president").text(is_it_you);
-                $("#chancellor_candidate").text(chanc);
+                $("#current_president").text(are_you_president);
+                $("#chancellor_candidate").text(are_you_chancellor);
             });
 
             $("#ja").on("click", function() {
@@ -480,10 +481,11 @@
             });
 
             // Vote complete, display vote completion ui
-            socket.on('vote complete', function(result, chancellor, record) {
+            socket.on('vote complete', function(result, chancellor, record, randomPolicy) {
                 resultCount++;
                 var results = result ? "Ja" : "Nein";
-                var script = result ? chancellor + ' is the new chancellor!' : chancellor + ' has failed in his bid to become chancellor!'
+                var script = result ? chancellor + ' is the new chancellor!' : chancellor + ' has failed in his bid to become chancellor!';
+                randomPolicy ? script + " Also because this was the 3rd failure, a RANDOM policy has been enacted!" : "";
                 var voteResult = document.createElement('ul');
 
                 for(var i = 0;i < record.length;i++) {
