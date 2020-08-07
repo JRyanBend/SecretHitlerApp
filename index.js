@@ -456,7 +456,7 @@ io.on('connection', function(socket){
         function gameResolutionCheck(cardAvailable) {
             // Add the policy card to the game board depending on if a card is sent in
             if(cardAvailable) {
-                Game.addPolicy(card[0].type);
+                Game.addPolicy(cardAvailable[0].type);
             } else {
                 Game.addPolicy(Math.random() >= 0.5 ? "liberal" : "fascist");
             }
@@ -470,7 +470,7 @@ io.on('connection', function(socket){
                 // Game is over, liberals win!!
                 io.emit("game over", "liberals");
                 game_over = 1;
-            } else if (board["facist"] >= 6) {
+            } else if (board["fascist"] >= 6) {
                 // Game is over, fascists win!!
                 io.emit("game over", "fascists");
                 game_over = 1;

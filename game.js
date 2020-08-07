@@ -111,7 +111,7 @@ Game.prototype.getCards = function(stack) {
 };
 
 // Return the current state of the board
-Game.prototype.getBoard = function(card) {
+Game.prototype.getBoard = function() {
     return this.board;
 };
 

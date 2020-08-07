@@ -11,7 +11,7 @@
                 <img class="logo" src="img/SecretHitlerLogo.png">
                 <div class="intro__form">
                     <form id="nickname" class="form form--nickname">
-                        <label class="form__label">Please enter a nickname penis:</label>
+                        <label class="form__label">Please enter a nickname:</label>
                         <input id="nick" autocomplete="off" class="form__input" />
                         <p class="error" id="name_error">That name is already taken, please try another one</p>
                         <p class="error" id="name_length_error">You have to enter a name to start</p>
@@ -53,16 +53,16 @@
             <img id="player_card__team" class="player_card__team" src="img/Secret-Role-Liberal.jpg">
         </div>
 
-        <!-- Should probably be generating these with javascript -->
+        <!-- Chancellor Select screen for the president -->
         <div id="chancellor_select" class="fullscreen_popup">
             <div class="fullscreen_popup__block">
-                <h2>Select your chancellor:</h2>
+                <h1>You're the next President!</h1>
+                <h2>Please select your chancellor:</h2>
                 <div id="chancellor_select__list" class="chancellor_select__list"></div>
             </div>
         </div>
 
-        <!-- After vote, create closed list of vote results, for later consultation -->
-        <!-- Might make this toggle-able as this might be overpowered -->
+        <!-- Chancellor Vote screen -->
         <div id="chancellor_vote" class="fullscreen_popup">
             <div class="fullscreen_popup__block">
                 <h2><span id="current_president">Blank</span> chosen <span id="chancellor_candidate">blank</span> as the candidate for chancellor.</h2>
@@ -71,8 +71,7 @@
             </div>
         </div>
 
-        <!-- After vote, create closed list of vote results, for later consultation -->
-        <!-- Might make this toggle-able as this might be overpowered -->
+        <!-- Card Discard screen -->
         <div id="card_select" class="fullscreen_popup card_select">
             <div class="fullscreen_popup__block">
                 <h2>Choose ONE card to discard</h2>
@@ -80,8 +79,7 @@
             </div>
         </div>
 
-        <!-- After vote, create closed list of vote results, for later consultation -->
-        <!-- Might make this toggle-able as this might be overpowered -->
+        <!-- End Game screen -->
         <div id="game_over" class="fullscreen_popup game over">
             <div class="fullscreen_popup__block">
                 <h2>GAME OVER!</h2>
@@ -104,7 +102,7 @@
             var socket = io();
             var currentUser;
             var selected_cards;
-            var resultCount;
+            var resultCount = 0;
 
             //////////////////////////////////////////////////////////////
             // Utility Functions
@@ -114,8 +112,6 @@
             $("#menu, #sidebar-close").on("click", function() {
                 $(".sidebar").toggleClass("sidebar--show");
             });
-
-
 
             // Display lightbox
             function lightbox(args) {
@@ -495,7 +491,7 @@
                     $(voteResult).append($('<li>').html('<p><span class="voter_name">' + record[i][0] + '</span> voted: ' + vote_translate));
                 }
                 // Replace with full screen ui, just hide and show as neccessary
-                $('#messages').append($('<li>').html('<div class="votes"><h4>Vote ' + resultCount + ': ' + script + '</h4><div class="vote_results" id="result_' + resultCount + '"></div></div>'));
+                $('#messages').append($('<li>').html('<div class="votes"><h4>Round ' + resultCount + ' Voting Results: ' + script + '</h4><div class="vote_results" id="result_' + resultCount + '"></div></div>'));
                 $('#result_' + resultCount ).append($('<li>').html(voteResult));
 
                 $(".votes").on("click", function() {
@@ -528,7 +524,12 @@
             // Card selected, update the game board
             socket.on('game over', function(winners) {
                 $("#game_over").show();
-                $("#game_over_message").html(winners + " are the winners!")
+                if(winners === "liberals") {
+                    win_flavor_text = "The Liberals have prevailed and Democracy wins again!";
+                } else {
+                    win_flavor_text = "The Fascists have risen to power! How did we let this happen?"
+                }
+                $("#game_over_message").html(win_flavor_text)
             });
         });
         </script>
