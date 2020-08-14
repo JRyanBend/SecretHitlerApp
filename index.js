@@ -326,6 +326,9 @@ io.on('connection', function(socket){
             gameStarted = true;
             console.log(name + " has started the game. There are " + ready + " players in this game.");
 
+            // Send the number of players to choose the righ mat
+            io.emit("total players", players.length);
+            
             // Fire off the first chancellor vote
             // Select a random player and emit that socket call to them
             player_order = getRandomIntInclusive(0, players.length);
@@ -407,6 +410,7 @@ io.on('connection', function(socket){
                     }
 
                     // Push game forward by moving the president to the next player and cleaning up previous flags
+                    // TODO:
                     // This is DUPLICATE code, need to refactor
                     player_order++;
                     Players.getPresident(true);

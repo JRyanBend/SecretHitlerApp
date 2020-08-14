@@ -363,6 +363,19 @@
                 }
             });
 
+            socket.on('total players', function(players) {
+                if(players > 6) {
+                    console.log("Board 2")
+                    $("#fascist_policies").css("background-image", "url(../img/Fascist-Game-Board--2.jpg)");
+                } else if(players > 8) {
+                    console.log("Board 3")
+                    $("#fascist_policies").css("background-image", "url(../img/Fascist-Game-Board--3.jpg)");
+                } else {
+                    console.log("Board 1")
+                }
+            });
+            
+
 
             
             //////////////////////////////////////////////////////////////
