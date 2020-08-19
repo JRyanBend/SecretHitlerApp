@@ -3,7 +3,7 @@
 var Players = require('./Players');
 
 function Game() {
-  this.board = {"liberal": 0, "fascist": 0};
+  this.board = {"liberal": 0, "fascist": 0, "type": 1};
 }
 
 function allegianceRandomizer() {
@@ -107,6 +107,8 @@ Game.prototype.getCards = function(stack) {
         cardStack = stack;
     }
 
+    console.log("<================>")
+    console.log(cardStack)
     return cardStack;
 };
 
@@ -124,9 +126,30 @@ Game.prototype.addPolicy = function(card) {
     } else {
         this.board.fascist++;
     }
-
     console.log(this.board);
+
+    // Check if we tripped a special ability
+    if(
+        (this.board.fascist > 0 && this.board.type === 3) ||
+        (this.board.fascist > 1 && this.board.type === 2) ||
+        (this.board.fascist > 2 && this.board.type === 1)
+    ) {
+        fascistPowers()
+    }
 };
+
+// Set the board type
+Game.prototype.setType = function(type) {
+    this.board.type = type;
+}
+
+function fascistPowers() {
+    // This should be all set up now to do all the fashy stuff
+    console.log("FASCIST POWER TRIGGERED")
+
+    // Presidential Peek
+
+}
 
 
 module.exports = new Game();

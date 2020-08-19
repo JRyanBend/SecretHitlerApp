@@ -367,11 +367,14 @@
                 if(players > 6) {
                     console.log("Board 2")
                     $("#fascist_policies").css("background-image", "url(../img/Fascist-Game-Board--2.jpg)");
+                    socket.emit("set board", 2)
                 } else if(players > 8) {
                     console.log("Board 3")
                     $("#fascist_policies").css("background-image", "url(../img/Fascist-Game-Board--3.jpg)");
+                    socket.emit("set board", 3)
                 } else {
                     console.log("Board 1")
+                    socket.emit("set board", 1)
                 }
             });
             
@@ -470,7 +473,7 @@
                 // Append the policy cards to the fullscreen display
                 $('#policy_cards').html('').append(policyCards);
 
-                // Card Chosen, needs to be here bcuz the new elements need to have event's appended
+                // Card Chosen, needs to be here bcuz the new elements need to have events appended
                 $(".card_team").on("click", function() {
                     for(var i = 0;i < selected_cards.length;i++) {
                         console.log("Loop #" + i + " clicked element id =" + this.id +", current array element =" + selected_cards[i].id);
@@ -534,7 +537,7 @@
                 $('#fascist_policies').html('').append(fascistCards);
             });
 
-            // Card selected, update the game board
+            // Game condition completed, time to end it
             socket.on('game over', function(winners) {
                 $("#game_over").show();
                 if(winners === "liberals") {

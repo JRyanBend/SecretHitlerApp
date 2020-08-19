@@ -25,6 +25,7 @@ var random_starting_player;
 var player_order;
 var game_over;
 var unsuccessful_chancellor_election = 0;
+var cards;
 
 // BASE EXPRESS FUNCTIONS
 // Create path to static files
@@ -326,8 +327,11 @@ io.on('connection', function(socket){
             gameStarted = true;
             console.log(name + " has started the game. There are " + ready + " players in this game.");
 
-            // Send the number of players to choose the righ mat
+            // Send the number of players to choose the right fascist mat
             io.emit("total players", players.length);
+
+            // Draw the initial set of cards
+            cards = Game.getCards();
             
             // Fire off the first chancellor vote
             // Select a random player and emit that socket call to them
@@ -336,6 +340,10 @@ io.on('connection', function(socket){
             io.to(players[player_order].user_id).emit("chancellor select", Players.getPlayers());
             Players.modifyPlayer(player_order, "president", true);
             currentPresident = players[player_order];
+        });
+
+        socket.on('set board', function(type) {
+            Game.setType(type);
         });
 
 
@@ -388,7 +396,7 @@ io.on('connection', function(socket){
                     }
 
                     // Chancellor successfully elected, move on to card select
-                    gameLoop();
+                    gameLoop(cards);
                     
                 } else {
                     // Track unsuccessful elections
@@ -440,10 +448,10 @@ io.on('connection', function(socket){
         }); 
 
         // Once the Chancellor has been selected, this will begin the policy card selection process
-        function gameLoop() {
+        function gameLoop(cards) {
 
             console.log("We're in gameloop!")
-            var cards = Game.getCards();
+            cards = Game.getCards(cards);
             var top3 = [];
             var cardSlice;
 
